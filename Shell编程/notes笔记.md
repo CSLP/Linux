@@ -3,6 +3,17 @@
 
 [TOC]
 
+[TOC]
+
+### 0. 大纲
+
+[Shell笔记](#Shell 笔记)
+
+* [1. 运行](#1. 运行)
+* [2. Shell变量](#2. Shell变量)
+* [3. Shell字符串](#3. Shell字符串)
+* [4. Shell数组](#4. Shell数组)
+
 ### 1. 运行
 
 * 创建test.sh 名字随便，见名知意更好，shell脚本一般.sh表明
@@ -1458,15 +1469,30 @@
 
 * **如果希望将 stdout 和 stderr 合并后重定向到 file**
 
-  * ```shell
-    command > file 2>&1
-    ```
+  * 将标准错误输出追加到标准输出通道
 
-  * ```shell
-    command >> file 2>&1
+    * ```shell
+    command > file 2>&1
+      # 第一个> 相当于1> 表示将标准输出重定向到file
+      #  2>&1  表示将标准错误输出追加到标准输出通道，所以这么一组合，给人一种合并stdout,stderr然后输出的感觉
+      # 如果错误写为2>1 表示将标准错误输出重定向到文件1
     ```
-    
-    
+      
+    * ```
+      command >> file 2>&1
+      ```
+
+  * 将标准输出追加到标准错误输出通道
+
+    * ```
+      command 2> file 1>&2  同理
+      ```
+
+    * ```
+      command 2>> file 1>&2  
+      ```
+
+      
 
 * 如果希望对 stdin 和 stdout 都重定向
 
