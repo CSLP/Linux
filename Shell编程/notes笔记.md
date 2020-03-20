@@ -7,12 +7,12 @@
 
 ### 0. 大纲
 
-[Shell笔记](#Shell 笔记)
+[Shell笔记](#Shell-笔记)
 
-* [1. 运行](#1. 运行)
-* [2. Shell变量](#2. Shell变量)
-* [3. Shell字符串](#3. Shell字符串)
-* [4. Shell数组](#4. Shell数组)
+* [1. 运行](#1.-运行)
+* [2. Shell变量](#2.-Shell变量)
+* [3. Shell字符串](#3.-Shell字符串)
+* [4. Shell数组](#4.-Shell数组)
 
 ### 1. 运行
 
