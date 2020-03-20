@@ -1,4 +1,7 @@
 
+# Shell 笔记
+
+
 <!--ts-->
    * [Shell 笔记](#shell-笔记)
          * [1. 运行](#1-运行)
@@ -76,14 +79,9 @@
                * [7. /dev/null文件](#7-devnull文件)
          * [14. Shell 文件包含](#14-shell-文件包含)
 
-<!-- Added by: wuyulp, at: Fri Mar 20 10:07:10 CST 2020 -->
+<!-- Added by: wuyulp, at: Fri Mar 20 11:00:14 CST 2020 -->
 
 <!--te-->
-
-# Shell 笔记
-
-
-
 
 ### 1. 运行
 
