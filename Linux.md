@@ -28,25 +28,35 @@
   * 终端不是shell，而是帮助我们同shell交互的另一个程序
     * shell只负责接受命令，然后交给OS执行，那些诸如编码、字体、快捷键、外观等花里胡哨的功能都是终端负责的
       * 比如GNOME界面的terminal可以运行sh, bash,或者zsh
-      * 比如windows terminal ，它与传统意义上的终端有些差别，他更像一个终端管理器，可以管理各种终端。
-        * 比如管理cmd，windows powershell， powershell，wsl的终端
+      * 比如windows terminal 可以运行cmd，windows powershell， powershell，wsl的bash
 
 * ###### TTY(teletypewriter)
 
   * 即使不运行终端仿真器，Linux系统默认后台运行着几个终端，可以alt+ctrl+1~7调用，类似远古时期真正的终端。分别是6个tty和一个GUI。
+  
+* **一个终端可以运行多个shell**。
+
+  * 例如Ubuntu默认运行bash，然后输入zsh，那么bash转为后台运行，终端以当前用户身份启动一个新的zsh，再输入zsh，当前zsh转入后台，启动一个新zsh，输入zsh。。。。可以运行无数zsh。类似一个栈，在当前shell运行另一个shell，当前shell压入栈。
+  * 输入exit退出当前shell，栈里有shell的话弹出栈顶shell。
+  * 再次强调，shell只是一个程序而已，跟普通的程序没什么不同，别想的太神秘。以下是在zsh中输入3次zsh之后的进程信息，可以看到此时一共运行着4个zsh进程
+    * ![](pics/Linux/4Zsh.png)
 
 ## 1.2 shell wildcards(globbing 通配符)
+
+* glob
+  * shell的所谓通配符就是一种简化了的正则表达式而已罢了。
 
 * 常用通配符
 
   * | Wildcard      | Meaning                                                      |
     | ------------- | ------------------------------------------------------------ |
-    | *             | Matches any characters                                       |
-    | ?             | Matches any single character                                 |
+    | *             | Matches any characters(0个或者任意多个字符)                  |
+    | **            | 表示匹配任意中间目录，比如 a/**/z 可以<br/>匹配 a/z 、 a/b/z 或 a/b/c/z 等 |
+    | ?             | Matches any single character(任意的一个字符)                 |
     | [characters]  | Matchs any character that is a member of the set characters(匹配集合中的任意一个，所**有的方括号都是匹配对应集合中的任意一个**，下同理) |
     | [!characters] | Matchs any character that is not a member of the set characters |
     | [[:class:]]   | Matches any character that is a member of the specified class |
-
+    
   * [characters] 中的characters 代表任意字符集合
 
   * [[:class:]]中的 [:class:] 代表集中已定义的字符类，见下表
@@ -92,6 +102,63 @@
 
   > An alias. Commands that we can define ourselves, built from other commands
 
+#### 1.3.3 举例
+
+* ![](pics/Linux/history.png)
+  * 默认bash或者说默认shell中history是个内建命令，但是装了oh-my-zsh之后，oh-my-zsh用自己的版本替换了内建的history，此时运行的history命令就是典型的第三种命令，shell function
+
+
+
+
+
+## 1.4. IO重定向(redirection)和管道线(pipeline)
+
+#### 4.1 输入、执行、输出
+
+* 所有程序的功能都是接受输入、执行、输出。
+* 所以管理程序执行的核心三个方面
+  * Input(输入)
+  * execute(执行)
+  * Output(输出)
+
+#### 4.2 stdin, stdout, stderr
+
+> Unix一切皆为文件，所以shell为了管理程序的IO以及执行本身，定义了三个特殊文件，标准输入(stdin),标准输出(stdout),标准错误输出(stderr)
+
+* standard input(stdin)
+  * 特殊文件，程序从这个文件中读取执行所需的输入
+  * 默认链接到键盘
+* standard ouput(stdout)
+  * 特殊文件，程序将预期的结果输出到该文件(将预期的结果意味着程序必须正确执行才有预期的记过)
+  * 默认链接到屏幕
+* standard error(stderr)
+  * 特殊文件，上面说到的执行本身，就反应在这个文件。程序的管理者或者说调用者，将程序执行的一些状态信息，常常是程序执行错误产生的错误信息输出到这个文件。
+  * 默认链接到屏幕。
+
+#### 4.3 重定向
+
+> 就是改变stdin, stdout, stderr的默认链接对象。详细用法见CLI笔记
+
+* \>
+  * 重定向stdout
+* 2>
+  * 重定向stderr
+* &>
+  * 重定向stdout 和stderr
+* <
+  * 重定向stdin
+
+#### 4.4 管道(pipeline)
+
+> The ability of commands to read data from standard input and send to standard output is utilized by a shell feature called pipelines. Using the pipe operator “|” (vertical bar), the standard output of one command can be piped into the standard input of another
+
+* command1 | command2
+  * 命令1的输出到标准输出的内容将作为命令2的标准输入
+
+
+
+
+
 # 2. GUI
 
 #### 2.1 窗口聚焦策略（Focus policy)
@@ -105,6 +172,14 @@
 
   * 鼠标在哪个窗口上，哪个窗口成为活动窗口。但是不会变为前端窗口，除非点一下
     * 比如X GUI
+
+
+
+
+
+
+
+
 
 # 3. 文件系统
 
@@ -181,7 +256,11 @@
 * FIFO(pipe)                 管道文件
 * socket                       套接字文件
 * character special file      字符设备文件
+  * 指按照字节流处理数据的设备，常见的是terminal和modem(调制解调器)
+
 * block special file             块设备文件
+  * 指按照数据块处理数据的设备，常见的是硬盘
+
 
 #### 3.2 文件命名
 
@@ -211,40 +290,9 @@
   * 如果不指定路径名，则默认是./
     * 例如  rm  x   本质是相对路径  rm  ./x
 
-#### 3.5 文件权限管理
+#### 3.5 链接文件
 
-* 一个文件的Unix访问权限，包括12位，通常用4个8进制位表示，这四个8进制位依次代表：
-  * 第一个(一般没啥用，不管，默认基本都是0)
-    * 4
-      * SUID
-    * 2
-      * SGID
-    * 1
-      * SVTX
-    * 3,5,6,7 代表对应数字的组合的意义，如3 = 1 + 2，那么代表SGID and SVTX
-  * 第二个(代表文件拥有者的读写执行权限)
-    * 4
-      * 有读权限(R)
-    * 2
-      * 有写权限(W)
-    * 1
-      * 有执行权限(X)
-    * 3,5,6,7同理，3代表有WX权限，7代表有RWX权限
-  * 第三个(代表文件拥有者同组的用户的RWX权限)
-    * 同上
-  * 第四个(不同组的其他用户)
-    * 同上
-* 常见文件权限表示方法
-  * 字母法
-    * RWXR--R--X
-      * 3个字母一组，分别表示拥有者，同组用户，其他用户的读写权限，默认第一个8进制数为0
-  * 数字法
-    * 777,333
-      * 一个数字表示8进制数，分别表示拥有者，同组用户，其他用户的读写权限，默认第一个8进制数为0
-
-#### 3.6 链接文件
-
-##### 3.6.1 硬链接  Hard Link
+##### 3.5.1 硬链接  Hard Link
 
 1. 旧
    * 硬链接是UNIX传统的创建链接的方式，现在一般用软链接。
@@ -303,7 +351,7 @@
     * 创建一个a的硬链接文件后，a，a_hard的硬链接数都是2，**本质是指它们对应的数据部分此时有了两个名字**。第一行为文件对应的i**node节点，可以发现，两个一样，所以它们指向的是同一块数据，只是名字不同而已。**
     * 所以不管是修改a，或者是修改a_hard,修改的都是同一块数据内容。
   
-##### 3.6.2 软链接 Symbolic(soft) Link
+##### 3.5.2 软链接 Symbolic(soft) Link
 
   1. 现代
 
@@ -377,22 +425,86 @@
 
 
 
+# 4. 权限管理
 
+### 4.1 用户，组
 
-* apt update   
-  * update，更新。 看看有啥更新。(不执行更新)
-* apt upgrade
-  * 根据apt update的更新，执行实际的升级动作
+* User, Group
+  * Linux中每个文件都有其所有者(owner)——用户
+  * 每个文件都有其用户组—— group owner
+    * 注意文件的用户组不一定是其拥有者所在的组
+* Uid, Gid
+  * uid(user id)
+    * 每个用户有自己唯一的id
+  * gid(group id)
+    * 每个组有自己唯一的id
+* 常规用户与非常规用户
+  * 常规用户就是人类用户，包括root
+  * 非常规用户有许多系统用来管理权限的定义的花里胡哨的用户和组
+* 与User相关的配置文件
+  * /etc/passwd
+    * 列出了所有用户和用户相关的信息
+  * /etc/group
+    * 列出了所有组和组相关信息
+  * /etc/shadow
+    * 原来密码信息也位于/etc/passwd 文件，所以命名为passwd，但是这个文件所有人都可以读，所以不安全，因此把密码信息单独冲passwd中抽离出来存在/etc/shadow中
+    * 显示的密码是SHA512加密过的。
+    * 不止有密码等信息，还有最后一次修改时间：最小修改时间间隔：密码有效期：密码需要变更前的警告天数等信息，用分号分隔开。
 
+### 4.2 文件权限管理
 
+##### 1. 读、写、执行(RWX: read、write、execution access)
 
+* 文件的权限管理主要有RWX这三个方面，这三个权限具体允许的行为如下表
 
+  * | Attribute | Files                                                        | Directories                                                  |
+    | :-------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+    | r         | Allows a file to be **opened and read.**                     | Allows a directory's contents **to be liste**d if the execute attribute is also set. |
+    | w         | Allows a file **to be written to or truncated,** however this attribute does not allow files to be renamed or deleted. The ability to delete or rename files is determined by directory attributes. | Allows files within a directory **to be created, deleted, and renamed** if the execute attribute is also set. |
+    | x         | Allows a file to be treated as a program and **executed**. Program files written in scripting languages must also be set as readable to be executed. | Allows a directory to be **entered**, e.g., cd directory.    |
 
+    * truncate  [ˈtrʌŋkeɪt] 截断、截短，删节
 
+##### 2. 所有者、组所有者、所有人(Owner、Group owner、Everybody else)
 
+> 现代的叫法是：**Owner, Group, Others**
 
+* 将使用文件的对象分为3类，文件的所有者、文件的组所有者、随便什么人。
+  * 文件的所有者和superuser可以控制文件的一切权限。
+  * 文件的组所有者也叫文件的用户组，该组拥有文件。
+  * 随便什么人就是该计算机上的任意用户。也就是everybody，在unix传统上也可叫做world，例如该文件的所有者可读、用户组可读、任意人可读，那么可以称为owner-readable, group-owner-readable, world-readable.
+* 文件权限与使用文件的对象相结合，诞生了最著名的Unix的权限管理机制：
+  * ![](pics/Linux/PermissionAttributes.png)
 
+##### 3. 文件模式(File Mode)
 
+* Unix用四个八进制位来表示文件权限，第一位表示一些特殊的权限，很少用。**后三位分别表示Owner, Group, Others 的RWX权限**。这个八进制四位数的每个取值，称为该文件的一种模式(mode)。例如0111，表示该文件owner-readable, group-readable, others-readable，第一个0先不管它。
+
+* **后三位**中的每一位的对应的二进制以及对应的文件权限如下表：
+
+  * | Octal | Binary | File Permission |
+    | ----- | ------ | --------------- |
+    | 0     | 000    | ---             |
+    | 1     | 001    | --x             |
+    | 2     | 010    | -w-             |
+    | 3     | 011    | -wx             |
+    | 4     | 100    | r--             |
+    | 5     | 101    | r-x             |
+    | 6     | 110    | rw-             |
+    | 7     | 111    | rwx             |
+
+* 第一位表示的权限很少用了，简单介绍一下，其对应关系如下表
+
+  * | Octal | Binary | File Permission |
+    | ----- | ------ | --------------- |
+    | 0     | 000    |                 |
+    | 1     | 001    | sticky          |
+    | 2     | 010    | setgid          |
+    | 3     | 011    |                 |
+    | 4     | 100    | setuid          |
+    | 5     | 101    |                 |
+    | 6     | 110    |                 |
+    | 7     | 111    |                 |
 
 
 
