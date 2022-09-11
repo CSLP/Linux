@@ -690,11 +690,16 @@
   * 切换到指定本地分支
   * 如果本地不存在名为branchname的分支，而存在名为branchname的远程分支，那么创建本地同名分支并跟踪该远程分支。
 * git checkout  -b \<name>
-  * 创建一个新分支并切换到该新分支
+  * 基于当前分支创建一个新分支并切换到该新分支
   * git checkout -b testing == git branch  testing ; git checkout testing
+* git checkout -b  \<branchName\> \<existedBranchName>
+  * 基于给定分支创建一个新分支并切换到该分支
+
+* git checkout -b \<branchName>  \<remote>/\<branch>
+  * 基于远程给定分支创建一个本地分支
+
 * git checkout  --track \<remote>/\<branch>
   * 创建一个跟踪该远程分支的同名本地跟踪分支
-
 * git checkout --track name  \<remote>/\<branch>
   * 创建一个跟踪该远程分支的不同名本地跟踪分支
 
