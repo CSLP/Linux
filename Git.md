@@ -583,6 +583,17 @@
     * git pull   ==  git fetch origin;  git merge origin/master
       * 有一点不同，当上游分支与当前分支有分歧时，git pull失败，还是需要手动合并。
 
+## 15. git clone
+
+* git clone URL
+  * 克隆远程仓库
+    * 本地新建仓库名字同远程仓库，本地新建master分支并跟踪远程master分支。
+    * 自动增加远程仓库名为origin，同时新增远程跟踪分支 origin/master
+* git clone URL  repoName
+  * 手动指定本地仓库名字
+* git clone -o remoteName URL
+  * 手动指定远程仓库名字
+
 ## 14. git push
 
 > git push本质是写远程仓库，所以你得有远程仓库的写权限才能push
