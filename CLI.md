@@ -295,6 +295,34 @@
       * \>
         * door 文件（Solaris上的特殊文件)
 
+###### du(disk usage)
+
+* **NAME**
+
+  * du - estimate file space usage
+
+    > estimate  [ˈestɪmət , ˈestɪmeɪt]  估计，估价
+
+* **SYNOPSIS**
+
+  * du [<u>OPTION</u>]... [<u>FILE</u>]...
+
+* **DESCRIPTION**
+
+  > Summarize disk usage of the set of FILEs, recursively for directories.
+
+  * 默认会递归显示目录和子目录大小,只显示目录，不包括目录下文件
+
+* **Common Option**
+
+  * | Option | Description                  |
+    | ------ | ---------------------------- |
+    | -a     | 递归显示目录大小，包括文件。 |
+    | -h     | human-readable               |
+    | -s     | 只显示总大小，不递归显示     |
+
+    
+
 ###### pwd (print working director)
 
   * **NAME**
@@ -685,6 +713,14 @@
 * **Common** **Option**
   * less <u>file</u>...
   * 使用less打开文件之后按h，就知道怎么翻页，滚动，搜索了。。
+    * f/space        (forward)
+      * 下一页
+    * b                   (backward)
+      * 上一页
+    * =
+      * 显示当前阅读进度
+    * \/
+      * 搜索，n下一个匹配，N上一个匹配
 
 ###### 总结
 
@@ -864,6 +900,52 @@
   * eg
     * 以我的Ubuntu为例， 我发现文件默认mode是0666，目录默认mode是0777，第一位特殊权限不管他。而mask是0002， 所以新建文件的mode都是0664即rw-rw-r--, 新建目录的mode都是0775，即rwxrwxr-x。我们自己修改mode，如下：
       * ![](pics/CLI/UmaskEG.png)
+
+### 2.3.3 搜索文件
+
+###### locate
+
+> 默认没装，需要 apt install mlocate ，我也不知道为啥叫mlocate
+
+* **NAME**
+
+  * locate - find files by name
+
+* **SYNOPSIS**
+
+  * locate [<u>OPTION</u>]... <u>PATTERN</u>...
+
+* **DESCRIPTION**
+
+  > locate  **reads  one  or  more databases** prepared by updatedb(8) and writes file names matching at least one of the PATTERNs to standard output, one per line.
+  >
+  > If --regex is not specified, PATTERNs can contain globbing characters.  If any PATTERN contains no globbing characters, locate behaves as if the pattern were  \*PATTERN\*.
+  >
+  > By default, locate does not check whether files found in database still  exist (but it does require all parent directories to exist if the database was built with --require-visibility no).  locate can never report  files  created  after the most recent update of the relevant database.
+
+  * 搜索Linux维护的相关数据库里面匹配模式的文件或目录。
+    * 该数据库一般一天刷新一次，所以搜索结果不是实时的，搜索出来的文件可能不存在，刚创建的文件也可能搜不到。
+    * updatedb手动刷新一次数据库，这样搜索出来的就是最新的了。
+
+###### find
+
+* **NAME**
+
+  * find - search for files in a directory hierarchy
+
+* **SYNOPSIS**
+
+  * find [<u>options</u>]... [<u>starting-point</u>...] [<u>expression</u>]
+
+* **DESCRIPTION**
+
+  > This manual page documents the GNU version of find.  GNU find searches the directory tree rooted at each given starting-point by evaluating the  given  expression from left to right, according to the rules of precedence (see section OPERATORS), until the outcome is known (the left hand side is  false  for  and operations,  true for or), at which point find moves on to the next file name. If no starting-point is specified, `.' is assumed.
+  >
+  > evaluate 求指，评估
+  >
+  > outcome 结果
+  >
+  > 
 
 ## 2.4 退出当前shell会话
 
