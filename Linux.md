@@ -508,9 +508,62 @@
 
 
 
+# 5. 包管理系统
 
+> The most important determinant of distribution quality is the packaging system and the vitality of the distribution's support community。
 
+### 5.1 包管理技术(Packing technologies)
 
+* 多数Linux系统基于以下两类包管理系统家族
+
+  * | Packaging System     | Distributions (Partial Listing)                              |
+    | :------------------- | :----------------------------------------------------------- |
+    | Debian Style (.deb)  | Debian, Ubuntu, Xandros, Linspire                            |
+    | Red Hat Style (.rpm) | Fedora, CentOS, Red Hat Enterprise Linux, OpenSUSE, Mandriva, PCLinuxOS |
+
+* Linux系统借助包来封装程序，从而借助包管理系统简单方便的安装，升级程序。
+
+### 5.2 包(package)和包仓库(repository)
+
+##### 5.2.1 包
+
+* 典型组成
+  * 程序部分
+    * 包含程序本体和程序需要的数据文件
+  * 元数据(metadata)
+    * 例如描述包内容的文本文件
+  * pre-installation , post-installation scripts
+    * 用于安装程序之前，之后进行配置任务的一些脚本。
+* 维护者
+  * 一般大多数包都有Linux发行版的发行商维护
+* 来源
+  * 大多数包都可以从官方包仓库获得。
+  * 或者从官网等地方下载包。
+
+##### 5.2.2 包仓库
+
+* 顾名思义，包仓库就是一些存放了许多包的有人维护的服务器。
+* 借助包仓库+包管理工具可以方便下载升级程序。
+* 一般每个发行版都会有官方维护的仓库和一些第三方仓库。
+
+### 5.3 依赖(dependency)
+
+* 程序运行时很少独立运行，它一般会依赖于许多库。在Windows叫DLL(Dynamic link library)，在Linux叫共享库(Shared library)
+* 现代包管理系统一般会自动帮忙安装程序所依赖的依赖。
+
+### 5.4  上层和底层软件包工具
+
+* 软件包管理系统通常由两种工具类型组成：
+
+  * 底层工具用来处理一些类似安装和删除软件包文件的任务
+  * 上层工具，完成元数据搜索和依赖解析
+
+* 常用
+
+  * | Distributions                            | Low-Level Tools | High-Level Tools |
+    | :--------------------------------------- | :-------------- | :--------------- |
+    | Debian-Style                             | dpkg            | apt              |
+    | Fedora, Red Hat Enterprise Linux, CentOS | rpm             | yum              |
 
 
 

@@ -1870,6 +1870,62 @@
   * 删除名为name的所有的进程。如果指定了用户，只删除该用户的。
   * kill利用pid终止进程，killall利用进程名终止进程。同kill，只有进程的所有者或者superuser才能使用killall终止进程。
 
+## 2.9 包管理系统相关
+
+###### apt
+
+* **NAME**
+
+  * apt - command-line interface
+
+* **SYNOPSIS**
+
+  * apt [<u>OPTIONS</u>]  <u>PKG</u>...
+
+* **DESCRIPTION**
+
+  > apt provides **a high-level commandline interface** for the package management system. It is intended as an end user interface and enables some options better suited for interactive usage by default compared to more specialized APT tools like apt-get(8) and apt-cache(8)
+
+  * 包管理系统提供的高层命令行接口。
+
+* **Common Option**
+
+  * | Option                    | Description                                                  |
+    | ------------------------- | ------------------------------------------------------------ |
+    | apt update                | update is used to download package information from all configured sources.(配置的源就是配置的可用包仓库的位置，一般是URL)                                                              Other commands operate on this data to e.g. perform package upgrades or search in and display details about all packages available for installation. 简单来说跟git fetch差不多，只是拉取远程包仓库的包信息，方便后续操作。 |
+    | apt upgrade               | upgrade is used to install available upgrades of all packages currently installed on the system from the sources configured via sources.list(5).           New packages will be installed if required to satisfy dependencies, but         existing packages will never be removed. If an upgrade for a package           requires the removal of an installed package the upgrade for this           package isn't performed. |
+    | apt install <u>PKG</u>... | 如果包没安装，那么安装，如果安装了，那么升级。               |
+    | apt purge <u>PKG</u>...   | 如果包已经卸载，清理包的残留配置文件(只会清理不在家目录里面的配置文件)，如果包没卸载，卸载包同时清理配置文件。 |
+    | apt remove <u>PKG</u>...  | 卸载包不清理残留配置文件，想清理加--purge参数，或者执行后apt purge |
+    | apt autoremove            | 卸载那些已经不需要的依赖。安装包的时候会自动下载依赖，但是卸载时并不会清除这些依赖，需要手动autoremove清理，但是慎用，可能会误清除。 |
+    | apt show <u>PKG</u>       | 显示包信息。(只要该包在包仓库或者已安装那么就会显示信息)     |
+
+###### dpkg(Debian package)
+
+* **NAME**
+
+  *  dpkg - package manager for Debian
+
+* **DESCRIPTION**
+
+  >  dpkg is a tool to install, build, remove and  manage  Debian  packages.
+
+  * dpkg功能很强大，是包管理系统的底层命令，可以用来构建软件包，卸载，安装等等，我们只介绍几个用户常用的。
+
+* **Common Usage**
+
+  * PKG-file 指\.deb结尾的包文件,<u>PKG</u>指包名
+
+  * | Usage                    | Meaning                                                      |
+    | ------------------------ | ------------------------------------------------------------ |
+    | dpkg -i  <u>PKG-file</u> | 安装或更新给定的包文件，如果包仓库没有我们需要的包，就需要我们去官网下载包，然后用该命令安装，如果已经有该包的旧版本，那么会自动更新包。 |
+    | dpkg -r <u>PKG</u>       | remove.卸载包，残留配置文件                                  |
+    | dpkg -P <u>PKG</u>       | purge.  清理包，卸载并清理残留文件。                         |
+    | dpkg -l [<u>PATTERN</u>] | list. 不加参数列出所有安装的包，加参数列出匹配的已安装包。支持正则和glob通配符。 |
+    | dpkg --status <u>PKG</u> | 列出已安装包的状态。                                         |
+
+    
+
 # 3. shell展开(expansion)
 
 > 所谓shell展开就是将一些特殊的参数展开成实际的参数，然后传达给命令。例如 ls *。 表面上看是ls接受星号作为参数。其实不是，首先是shell将星号展开成具体的ls可以识别的参数，然后传递给ls。
