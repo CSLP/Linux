@@ -1971,7 +1971,7 @@
         * {a..k}  ———— 对应的集合是{a,b,d,e,f,g,h,i,j,k}
         * {A..E} ———— 对应的集合是{A,B,C,D,E}
     * 注
-      * 大括号内不能有空白字符(whitespace)
+      * 大括号内不能有空白字符(whitespace(tab,space, \\n, \\r等不显示字符))
       * 括号内内容是有顺序的
         * echo   a{1,2,3}      展开为 echo a1 a2 a3
         * echo   a{3,2,1}      展开为 echo a3, a2, a1

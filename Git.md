@@ -12,9 +12,23 @@
 
 ![](pics/Git/gitFileStatus.png)
 
-## 2.2 Git分支
+![](pics/Git/fileCircle.png)
 
-### 2.2.1 本地
+
+
+## 1.2 Git的三个区域
+
+* git的最重要的三个区域就是HEAD、INDEX、WD(Working Directory)
+  * HEAD指已经提交的最新快照
+  * INDEX指已暂存的修改(可以理解为已暂存了的文件版本或者说预提交快照)
+  * WD指当前工作目录(可以理解为没提交没暂存的当前快照)
+* 所谓干净状态，working tree clean，就是刚提交完没做任何修改，此时 HEAD=INDEX=WD
+* 关系图
+  * ![](pics/Git/threeField.png)
+
+## 1.3 Git分支
+
+### 1.3.1 本地
 
 ##### 1. 可提交对象(commit object)
 
@@ -80,7 +94,7 @@
   * **合并完成后只有当前分支会移动，被合并分支不会**。
   * 合并完成后被合并分支就没啥用了，可以删除。
 
-### 2.2.2 远程
+### 1.3.2 远程
 
 ##### 1.远程跟踪分支
 
@@ -368,6 +382,24 @@
       * 首先是自带的cache和store,这两个是git自带的凭证管理工具，前者将我们凭证存在内存，意味着我们输一次凭证后，短时间内就不用再重复输入了，后者将凭证存到硬盘，Linux是~/.git-credentials位置，输入一次凭证之后，本机以后再也不用重复输入了。
       * 除了自带的凭证管理工具，默认不设置helper情况下，git会利用系统自带的凭证管理工具，比如在windows下就会弹出Windows凭证管理器，提示保存凭证之后就不用重复输入凭证了。也可以手动指定helper为其他想用的外部凭证管理器。
 
+##### 3.3.6 merge
+
+* merge.conflictstyle
+
+  > 默认状态下，和合并冲突时，git将冲突文件冲突部分修改成下面这样，方便我们处理冲突后提交
+  >
+  > ![](pics/Git/mergeConflict1.png)
+
+  * 值
+    * merge
+      * 当合并冲突时，git会修改冲突文件为以下形式
+        * ![](pics/Git/mergeConflict2.png)
+    * diff3
+      * 当合并冲突时，git会修改冲突文件为以下形式
+        * ![](pics/Git/mergeConflict3.png)
+
+### 3.4 我的配置文件
+
 ## 4 git status
 
 * git status
@@ -383,6 +415,26 @@
   * 列出已暂存但未提交的修改
 * git diff --check
   * 检查修改中的空白(应该尽量避免无意义的空白)
+* 合并冲突情况下,一般是修改了同一文件的同一部分
+  * git diff --ours
+    * 显示我们的修改(当前分支的修改)
+
+  * git diff --theirs
+    * 显示它们的修改(要合并的分支)
+
+  * git diff --base
+    * 显示我们，它们修改的同一部分原来的样子。
+
+  * eg
+    * 文件第一行如下: hello world
+      * 分支master 修改为hello China
+      * 分支main 修改为 hello  earth
+
+    * 在master分支执行 git merge main
+      * git diff --ours 显示 hello China
+      * git diff --theirs 显示 hello earch
+      * git diff --base 显示 hello world
+
 
 
 ## 6. git commit
@@ -676,12 +728,16 @@
 * git branch \<newBranchName> \<existedBranchName>
   * 创建一个指向某个存在分支指向的提交对象的分支
   * 也可以说基于existedBranchName创建一个新分支
+* git branch -u  \<remote\>/\<branch\>
+  * 设置已存在本地分支跟踪远程分支或者修改已存在分支正在跟踪的上游分支。
 
 * git branch -d \<branchName>
   * 删除该分支
   * 如果该分支没有被合并到任何分支，那么git拒绝删除,要想强制删除，使用-D。
 
 ## 16. git checkout
+
+#### 16.1 分支相关
 
 > 切换到新分支之前最好保持当前所有修改已提交，否则git可能阻止切换。
 >
@@ -698,11 +754,19 @@
 * git checkout -b  \<branchName\> \<existedBranchName>
   * 基于给定分支创建一个新分支并切换到该分支
 * git checkout -b \<branchName>  \<remote>/\<branch>
-  * 基于远程给定分支创建一个本地分支
+  * 创建一个跟踪该远程分支的本地跟踪分支并切换到该分支
 * git checkout  --track \<remote>/\<branch>
-  * 创建一个跟踪该远程分支的同名本地跟踪分支
-* git checkout --track name  \<remote>/\<branch>
-  * 创建一个跟踪该远程分支的不同名本地跟踪分支
+  * 创建一个跟踪该远程分支的同名本地跟踪分支并切换到该分支
+
+#### 16.2 合并冲突相关
+
+* git checkout --conflict=diff3 file
+  * 将当前冲突文件修改为这种形式。(不理解的话参考本笔记配置部分的merge部分)
+    * ![](pics/Git/mergeConflict3.png)
+* git checkout --ours file
+  * 修改冲突文件，保留我们的修改，丢掉它们(theirs)的修改。(这样就不用我们手动编辑冲突文件了)
+* git checkout --theirs file
+  * 修改冲突文件，保留它们的修改，丢掉我们(ours)的修改
 
 ## 17. git stash
 
@@ -724,6 +788,9 @@
 * git merge \<branchName>
   * 将分支合并到当前分支
     * branchName分支不移动，**真正移动的是当前分支。**
+  * 如果有冲突，需要手动处理冲突之后再提交才能合并。
+* git merge --abort
+  * 如果合并有冲突，执行此命令，取消合并
 
 ## 20. git reset
 
