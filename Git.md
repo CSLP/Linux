@@ -402,6 +402,8 @@
 * git commit --amend
   * 将这次提交和上次提交合并为一个新的提交。
   * amend [əˈmend]  修正，修订
+  * git commit --amend --no-edit
+    * 如果只是想修改上次提交的提交内容，而提交信息不变，还用上次的，那么用这条命令
   
 * 良好的提交信息习惯
 
@@ -695,14 +697,26 @@
   * git checkout -b testing == git branch  testing ; git checkout testing
 * git checkout -b  \<branchName\> \<existedBranchName>
   * 基于给定分支创建一个新分支并切换到该分支
-
 * git checkout -b \<branchName>  \<remote>/\<branch>
   * 基于远程给定分支创建一个本地分支
-
 * git checkout  --track \<remote>/\<branch>
   * 创建一个跟踪该远程分支的同名本地跟踪分支
 * git checkout --track name  \<remote>/\<branch>
   * 创建一个跟踪该远程分支的不同名本地跟踪分支
+
+## 17. git stash
+
+> stash 	[stæʃ]  存放，贮藏
+>
+> 想要切换到别的分支，当前分支必须是干净状态(clean)。所谓干净状态就是没有修改后没暂存的文件，也没有暂存的文件，相当于 git add . && git ci  之后的状态。
+>
+> ![](pics/Git/workTreeClean.png)
+
+* git stash push
+  * 将当前工作状态存到git提供的贮存栈上
+    * 如果工作干到一半需要切换到另一分支但是并不想提交，那么git stash push将工作状态保存到git栈上，现在就是干净状态了。
+* git stash apply --index
+  * 切回分支，应用该命令，就可以还原切出去那时的工作状态。
 
 
 ## 17. git merge
@@ -710,3 +724,34 @@
 * git merge \<branchName>
   * 将分支合并到当前分支
     * branchName分支不移动，**真正移动的是当前分支。**
+
+## 20. git reset
+
+> 终于知道如何回到任意一个状态了。所谓的状态也就是所有文件的某个快照，也就是某次提交。git reset可以让当前分支回到任意一个提交处，没错，任意提交，这些提交可以是别的分支的提交，总之是该仓库的任意提交。
+>
+> 当前分支默认状态下指向该分支最新的一个提交，通过git reset 可以移动当前分支，使其指向任意一个提交。为了方便，加下来称当前分支此时指向的提交为源提交，加下来将要移动到的提交称为目的提交。
+
+* 差异
+
+  * 每当使用git reset时，git会自动计算源提交和目的提交之间的差异，并且这个计算方式是:
+
+    > 源提交 -  目的提交 = 差异。
+
+    * 也就是说目的提交加上显示的差异就能还原回源提交。
+
+  * git提供不同的方式让我们处理这些差异。
+
+* git reset --soft  SHA-1
+  * 将当前分支指向SHA-1序列码代表的提交。即，回到这次提交的文件快照状态。
+  * --soft表示，显示差异，并且差异为已暂存状态。
+* git reset --mixed SHA-1
+  * 同理回到特定提交
+  * --mixed或者或省略， 显示差异，并且差异为已修改未暂存状态。
+* git reset --hard SHA-1
+  * 回到特定提交
+  * --hard,丢弃差异，相当于完全回到当时提交的状态，一模一样复现当时的情景。
+* 常用于
+  * 回到特定文件版本
+    * 新建一个move分支，然后可以随意移动move分支到任意提交处，舒服的一比。
+  * 压缩提交
+    * 可以移动当前分支到10个提交之前，利用--soft参数，会暂存目的提交和最新提交的差异，也就是这10个提交所做的修改，然后直接提交，相当于用这一个提交代替了10个提交。
