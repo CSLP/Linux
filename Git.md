@@ -641,6 +641,7 @@
       * 表示将当前分支master推送到远程分支master。
       * 如果想要把当前分支master推送到一个名字不同的远程分支main
         * git push origin master:main表示将当前分支master推送到远程分支main，同理如果main不存在，那么创建main。
+        * 或 git push origin HEAD:main 因为HEAD值永远是当前分支的值
 * git push -u \<remote> \<branch>
   * 将当前分支推送到远程仓库的指定分支,并且指定当前分支跟踪远程仓库指定分支，之后在当前分支只需直接git push, git pull不用加参数，默认从跟踪的远程分支拉取。
 
