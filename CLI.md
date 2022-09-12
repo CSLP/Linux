@@ -944,8 +944,56 @@
   > evaluate 求指，评估
   >
   > outcome 结果
-  >
-  > 
+  
+  * Options
+  
+    * 仅有的几个参数是关于软链接的，所以一般的用途没啥参数
+  
+  * starting-point
+  
+    * Linux文件就是一颗文件树，所以在某个目录搜索，本质就是在那个目录节点搜索，所以起名开始点，很6.
+    * 省略那么默认开始点为当前目录。
+  
+  * expression
+  
+    > The part of the command line after the list of starting points  is  the  expression.   This  is a kind of query specification **describing how we match files and what we do with the files** that were matched.
+  
+    * **find不仅仅是查找文件而已，它非常强大，可以根据不同的筛选条件查找文件并且可以对匹配到的文件做后续处理。**这一切都由expression部分控制，正如命令描述部分所言，find命令的本质就是遍历以开始点为根的一个子树，然后对每个树节点evaluating the given expression.
+    * expression部分很复杂，详见man，以下举例几种常见的用法。注意find的参数部分参数都是以双横线开头，而expression部分的参数都是单横线开头并且位于starting-point 之后。
+  
+* **Common Usage**
+
+  * 根据文件名查找
+
+    * find  starting-point   -name/-iname filename
+
+      > -name 大小写敏感， -iname大小写不敏感(ignore case)
+
+      * 递归查找目录下所有名字为filename的文件，支持globbing通配符。
+
+        * find / -name Linux
+          * 查找根目录下名为Linux的文件，需要注意的是find是完全匹配，只匹配那些文件名为Linux的文件。而locate Linux实际相当于 locate \*Linux\*, 本质上是匹配文件名包含Linux的文件。
+
+        * find / -name \*Linux
+        * find / -name \*Linux\*
+        * find / -name ?Linux
+
+    * find starting-point -name filename  -type d/f
+
+      * 默认状态显示所有匹配的文件或目录，
+      * -type d  只显示目录
+      * -type f  只显示文件
+
+  * 根据大小找
+
+    * find /var   -size +10M   查找/var中大小大于10M的文件
+    * find /var   -size - 10G    小于10G的文件
+    * find /var   -size 10k     等于10KB的文件
+
+  * 根据文件的最近访问时间找(-atime   acess time访问时间）
+
+    - find -name *.jpg  -atime -7    找当前目录下最近7天内访问的jpg文件
+
 
 ## 2.4 退出当前shell会话
 
