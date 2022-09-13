@@ -425,6 +425,14 @@
 
 
 
+#### 3.6 归档和压缩文件
+
+* 归档(archiving)也叫打包
+
+  > Archiving is the process of gathering up many files and bundling them together into a single large file.
+
+  * 简而言之，可以将一个目录树归档成一个文件便于备份或压缩，并且保留了目录树层级关系因此解包后可以完全还原文件目录原来的层级关系。
+
 # 4. 权限管理
 
 ### 4.1 用户，组

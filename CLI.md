@@ -1134,6 +1134,166 @@
       * 利用\-exec,详见man
   
 
+### 2.3.4 归档压缩同步文件
+
+> 打包(归档)和压缩是两件事，只不过一般的压缩软件同时具有打包和压缩功能。
+>
+> 压缩会在源文件基础上加一些额外信息来描述压缩。所以如果源文件十分小，可能会出现压缩后比压缩前还大的问题。
+>
+> 所以不要压缩已经压缩了的文件，gzip  cnm.jpg， 因为压缩文件已经去掉冗余信息了，再压缩还会加入一些描述压缩的额外开销且并不能去除更多的冗余信息，所以反而越压缩越大。
+
+###### gzip
+
+* **NAME**
+
+  * gzip, gunzip, zcat - compress or expand files
+
+* **SYNOPSIS**
+
+  * gzip [<u>OPTIONS</u>] <u>FILE</u>...
+
+* **DESCRIPTION**
+
+  > Gzip  reduces the size of the named files using Lempel-Ziv coding (LZ77).  Whenever possible, each file is replaced by one with the extension .gz, while keeping the same ownership modes, access and modification times.  (The default extension  is z for MSDOS, OS/2 FAT, Windows NT FAT and Atari.)  If no files are specified, or if a file name is "-", the standard input is compressed to the standard output.  Gzip will only attempt to compress regular files.  In particular,  it  will  ignore symbolic links
+  >
+  > Compressed files can be restored to their original form using **gzip -d** or **gunzip** or **zcat**.  If the original  name  saved  in the compressed file is not suitable for its file system, a new name is constructed from the original one to make it legal.
+
+  * gzip只有压缩功能，没有打包功能。只能压缩文件，不能压缩目录
+
+  * 压缩并用压缩后文件替换源文件。默认后缀(suffix/postfix) \.gz
+  * gzip -d或gunzip解压。 
+  * 压缩 ： compress  解压缩：expand(扩展)， uncompress, decompress
+  * zcat file可以不解压情况下看压缩文件内容。
+
+###### bzip2
+
+* **NAME**
+  * bzip2, bunzip2 - a block-sorting file compressor, v1.0.8
+  * bzcat - decompresses files to stdout
+  * bzip2recover - recovers data from damaged bzip2 files
+* **SYNOPSIS**
+  * bzip2 [<u>OPTIONS</u>] <u>FILE</u>...
+* **DESCRIPTION**
+  * bzip2只有压缩功能，没有打包功能。只能压缩文件，不能压缩目录
+  * bzip2利用新的压缩算法，比gzip更快，压缩等级更高
+  * 默认压缩后缀为.bz2(也可以识别.bz的压缩包)
+  * bunzip解压文件
+  * bzcat不解压情况下看内容
+
+###### tar(tape archive)
+
+* **NAME**
+
+  * tar - an archiving utility
+
+* **SYNOPSIS**
+
+  * Traditional usage
+    * tar {A|c|d|r|t|u|x}[GnSkUWOmpsMBiajJzZhPlRvwo] [<u>ARG</u>...]
+  * UNIX-style suage
+    * tar -A [<u>OPTIONS</u>] <u>ARCHIVE</u> <u>ARCHIVE</u>
+    * tar -c [-f <u>ARCHIVE</u>] [<u>OPTIONS</u>] [<u>FILE</u>...]
+    * tar -d [-f <u>ARCHIVE</u>] [<u>OPTIONS</u>] [<u>FILE</u>...]
+    * tar -t [-f <u>ARCHIVE</u>] [<u>OPTIONS</u>] [<u>MEMBER</u>...]
+    * tar -r [-f <u>ARCHIVE</u>] [<u>OPTIONS</u>] [<u>FILE</u>...]
+    * tar -u [-f <u>ARCHIVE</u>] [<u>OPTIONS</u>] [<u>FILE</u>...]
+    * tar -x [-f <u>ARCHIVE</u>] [<u>OPTIONS</u>] [<u>MEMBER</u>...]
+
+* **DESCRIPTION**
+
+  > GNU **tar** is an archiving program designed to store multiple files in a single file (an **archive**), and to manipulate such archives.   The  archive  can  be either a regular file or a device (e.g. a tape drive, hence the name of the program, which stands for **t**ape archiver), which can be located either on the local or on a remote machine.
+
+  * 传统的tar只能打包解包，现在的tar可以同时打包压缩和解压缩解包。
+  * 打包目的是方便压缩，方便备份，方便网络传输(例如打包后就可以利用scp,sftp等传输目录了)
+
+  * 首先解释以下上述复杂的SYNOPSIS，很好理解，两个方面
+
+    * 风格
+
+      * 类似ps命令，tar也有三种使用风格，BSD风格就是短参数不加横线，UNIX风格就是短参数加一个横线。还有一个GNU风格没列出来就是长参数加两个横线。
+
+    * 第一个参数
+
+      * 类似netstat命令，第一个参数指定了tar工作在一个具体的功能分类。以下列出常用的:
+
+        * | 模式 | 说明                         |
+          | :--- | :--------------------------- |
+          | c    | create.创建归档文件。(打包)  |
+          | x    | extract.抽取归档文件。(解包) |
+          | r    | 追加文件或目录到归档文件     |
+          | t    | 列出归档文件的内容。         |
+
+  * 接下来解释一些参数的意义 
+
+    * ARCHIVE 包名
+    * FILE    要打包的文件或目录
+    * MEMBER包中特定的文件或目录
+      * tar -x [-f <u>ARCHIVE</u>] [<u>OPTIONS</u>] [<u>MEMBER</u>...] 如果指定了MEMBER参数，表示指解包中特定的成员文件或目录而不是解整个包。
+
+* **Common Usage**
+  * 打包，解包
+    * tar cf  <u>ARCHIVE</u>  <u>FILE</u>
+      * 打包文件
+      * tar cf ~/test.tar     test
+        * 将当前目录下test目录打包为test.tar并放在家目录下。
+    * tar tf <u>ARCHIVE</u>
+      * 浏览归档文件，如果想看详细信息  tar tvf 
+    * tar xf <u>ARCHIVE</u>
+      * 解包归档文件到当前目录
+    * tar rf <u>ARCHIVE</u> <u>FILE</u>
+      * 常用于已经有打包文件了，但是发现有些文件漏打包了，那么可以把这些文件追加打包到已存在的包中。
+  * 打包加压缩，解压缩加解包
+    * tar czf   <u>compressedFIle</u> <u>FILE</u>
+      * 打包后调用gzip压缩
+      * 压缩包一般命名为tar.gz 或者tgz
+      * tar czf   test.tar.gz    test
+        * 打包test并压缩为test.tar.gz
+    * tar cjf  <u>compressedFile</u> <u>FILE</u>
+      * 同上，这次调用bzip2压缩。
+      * 压缩包一般命名为tar.bz2或者tbz2
+
+###### zip
+
+* **NAME**
+  * zip - package and compress (archive) files
+* **SYNOPSIS**
+* **DESCRIPTION**
+  * 打包并压缩文件，常用于Windows，所以主要用于跨平台，LInux还是用gzip, bzip2多。
+* **Common Usage**
+  * zip [-r]  <u>compressedFile</u> <u>FILE</u>
+    * 打包并压缩文件或目录，如果是目录需要-r参数
+    * 压缩包一般命名为.zip
+  * unzip  <u>compressedFile</u>
+    * 解压缩文件
+  * unzip -l <u>compressedFile</u>
+    * 不解压缩情况下查看压缩文件，更详细的用-lv
+
+###### rsync(remote synchronize)
+
+* **NAME**
+
+  * rsync - a fast, versatile, remote (and local) file-copying tool
+    * versatile [ˈvɜːrsətl] a. 多功能的，多用途的
+
+* **SYNOPSIS**
+
+* **DESCRIPTION**
+
+  > Rsync  is  a fast and extraordinarily versatile file copying tool.  It can copy locally, to/from another host over any remote shell, or to/from a remote rsync daemon.  It offers a large number of options that control every aspect of  its behavior and permit very flexible specification of the set of files to be copied.  It is famous for its delta-transfer algorithm, which reduces the amount of data sent over the network by sending only the differences between  the  source files  and  the  existing files in the destination.  **Rsync is widely used for backups and mirroring and as an improved copy command for everyday use.**
+
+  * 常常用于增量备份或者镜像同步，可以备份到本地不同盘，或者备份到远程主机上。
+  * 或者用于镜像。例如国内的镜像Ubuntu官方仓库。
+  * 相对于手动备份好处在于可以自动识别内容，每次只做增量备份。
+
+* **Common Usage**
+
+  * 本地备份到本地
+    * rsync -av --delete  /home/linuxlp   /media/Sandisk/backup
+      * 把/home/linuxlp目录所有内容备份到U盘的backup文件夹下。
+      * 默认状态下只增不减，例如当前目录有file1，备份到目的地也有file1，现在我们删除file1了，继续备份，目的地不会删除。--delete参数就是删除目的地有的本地没有的，使目的地和当前保持完全一致。
+      * 每天或者每个月执行一下这条命令就可以了。
+  * 本地备份到远程
+  * 远程备份到本地
 
 ## 2.4 退出当前shell会话
 
