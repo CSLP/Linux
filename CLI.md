@@ -342,6 +342,15 @@
       * \>
         * door 文件（Solaris上的特殊文件)
 
+###### stat(status)
+
+* **NAME**
+  * stat - display file or file system status
+* **SYNOPSIS**
+  * stat [<u>OPTION</u>]... <u>FILE</u>...
+* **DESCRIPTION**
+  * 强大版的ls命令，可以列出Linux所维护的一切关于文件或目录的属性
+
 ###### du(disk usage)
 
 * **NAME**
@@ -430,7 +439,8 @@
 
     > no error if existing, make parent directories as needed
 
-    * 
+    * 默认状态下不能递归创建目录。例如当前目录没有fuck。
+      * 那么 mkdir  fuck/test  报错。此时可以利用-p选项，递归创建fuck，和fuck/test
 
 
 ###### touch
@@ -952,7 +962,7 @@
 
 ###### locate
 
-> 默认没装，需要 apt install mlocate ，我也不知道为啥叫mlocate
+> 默认没装，需要 apt install mlocate ，我也不知道为啥叫mlocate,知道了，因为locate太老了，现在都用mlocate，但是为了兼容locate，包名叫mlocate，并且运行locate实际运行的是mlocate
 
 * **NAME**
 
@@ -966,7 +976,7 @@
 
   > locate  **reads  one  or  more databases** prepared by updatedb(8) and writes file names matching at least one of the PATTERNs to standard output, one per line.
   >
-  > If --regex is not specified, PATTERNs can contain globbing characters.  If any PATTERN contains no globbing characters, locate behaves as if the pattern were  \*PATTERN\*.
+  > If --regex is not specified, PATTERNs can contain globbing characters.  **If any PATTERN contains no globbing characters, locate behaves as if the pattern were  \*PATTERN\*.**（as if 好像）
   >
   > By default, locate does not check whether files found in database still  exist (but it does require all parent directories to exist if the database was built with --require-visibility no).  locate can never report  files  created  after the most recent update of the relevant database.
 
@@ -991,6 +1001,16 @@
   > evaluate 求指，评估
   >
   > outcome 结果
+  >
+  > proceed [proʊˈsiːd] vi. 继续，接着做，行进，前进
+  >
+  > precede [prɪˈsiːd] v. 先于，在。。之前发生， 走在...前面
+  >
+  > precedence [ˈpresɪdəns] n. 优先，优先权
+  >
+  > prior [ˈpraɪər] a. 先前的，较早的，优先的
+  >
+  > priority  [praɪˈɔːrəti] n. 优先，优先权
   
   * Options
   
@@ -1007,39 +1027,112 @@
   
     * **find不仅仅是查找文件而已，它非常强大，可以根据不同的筛选条件查找文件并且可以对匹配到的文件做后续处理。**这一切都由expression部分控制，正如命令描述部分所言，find命令的本质就是遍历以开始点为根的一个子树，然后对每个树节点evaluating the given expression.
     * expression部分很复杂，详见man，以下举例几种常见的用法。注意find的参数部分参数都是以双横线开头，而expression部分的参数都是单横线开头并且位于starting-point 之后。
+    
+    > An expression is composed of a sequence of things: Tests, Actions, Global options, Positional options, Operators. 这几部分参数可以组合使用也可以单独使用。下面列出几种常见的表达式参数
   
-* **Common Usage**
+* **Common Expression**
 
-  * 根据文件名查找
+  * Tests(测试条件)
 
-    * find  starting-point   -name/-iname filename
+    > find命令对开始点为根的文件子树的每一个节点执行指定的测试条件，如果值为真，那么就表示匹配该文件或目录供后续处理。
 
+    * 省略的话会递归列出开始点为根树的所有节点。
+
+    * -type d/f/b/c/l...
+
+      > (directory, regular file, block special device file, character special device file, symbolic link...)
+  
+      * 仅匹配目录或常规文件或。。。
+      * find ~ -type d
+        * 列出所有目录
+  
+    * -name  <u>pattern</u>
+  
       > -name 大小写敏感， -iname大小写不敏感(ignore case)
-
-      * 递归查找目录下所有名字为filename的文件，支持globbing通配符。
-
+  
+      * 递归查找目录下所有名字为pattern的文件，支持globbing通配符。
+  
         * find / -name Linux
           * 查找根目录下名为Linux的文件，需要注意的是find是完全匹配，只匹配那些文件名为Linux的文件。而locate Linux实际相当于 locate \*Linux\*, 本质上是匹配文件名包含Linux的文件。
-
         * find / -name \*Linux
         * find / -name \*Linux\*
         * find / -name ?Linux
-
-    * find starting-point -name filename  -type d/f
-
-      * 默认状态显示所有匹配的文件或目录，
-      * -type d  只显示目录
-      * -type f  只显示文件
-
-  * 根据大小找
-
-    * find /var   -size +10M   查找/var中大小大于10M的文件
-    * find /var   -size - 10G    小于10G的文件
-    * find /var   -size 10k     等于10KB的文件
-
-  * 根据文件的最近访问时间找(-atime   acess time访问时间）
-
-    - find -name *.jpg  -atime -7    找当前目录下最近7天内访问的jpg文件
+  
+    * -size  [+-]<u>n</u>[cwbkMG]
+  
+      * 递归查找目录下所有符合大小条件的文件
+      * \+ 大于 \-小于， 省略，等于。
+      * c(bytes) w(two bytes words) k(KiB) M(MiB) G(GiB) 
+        * find /var  -name nmsl -type f -size +10M  
+          *  查找/var中大小大于10M的名为nmsl的常规文件
+  
+  
+    
+  
+    * -atime <u>n</u>
+  
+      > n单位是天， access time
+  
+      * 根据文件的最近访问时间找
+        * find -name *.jpg  -atime -7    找当前目录下最近7天内访问的jpg文件
+  
+  * Operator
+  
+    > 说白了就是与或非测试条件，使测试条件更复杂，对每个目录树节点执行测试表达式时同样会短路求值。
+  
+    * | Operator  | Description    |
+      | --------- | -------------- |
+      | -and , -a | 与             |
+      | -or,  -o  | 或             |
+      | -not , !  | 非             |
+      | ()        | 改变执行优先级 |
+  
+      > parenthesis n. 圆括号 parentheses  n. pl. (复数) 圆括号
+      >
+      > bracket 括号
+      >
+      > brace 花括号
+  
+    * eg
+  
+      * 默认状态下就是-and
+        * find /  -name nmsl -type -f
+          * == find / -name nmsl -and -type -f
+          * 查找名字是nmsl的常规文件
+      * -or 或, ()
+        * find / -name nmsl     -or      \\(-size +1M -and -type -f \\)
+          * 查找名字是nmsl的文件或目录和大于1M的常规文件。
+          * 括号在shell中有特殊含义，所以需要转义符
+      * -not
+        * find /   -not -name  nmsl
+          * 查找名字不是nmsl的所有文件
+  
+  * Actions
+  
+    > 对匹配的所有文件做什么事情
+    >
+    > 系统预定义了一些操作，同时支持用户自定义自己的操作
+  
+    * 常用系统预定义Actions
+  
+      * | 操作    | 描述                                                         |
+        | :------ | :----------------------------------------------------------- |
+        | -delete | 删除当前匹配的文件。                                         |
+        | -ls     | 对匹配的文件执行等同的 ls -dils 命令。并将结果发送到标准输出。 |
+        | -print  | 把匹配文件的全路径名输送到标准输出。如果没有指定其它操作，这是 默认操作。 |
+        | -quit   | 一旦找到一个匹配，退出。                                     |
+  
+        * find /  -name 'nmsl*' -type f  -delete
+          * 删除根目录下所有以nmsl开头的常规文件
+  
+      * actions 和 tests之间顺序不同，最后结果会不同。并且它们之间也可以通过Operator连接形成复杂的逻辑表达式。
+  
+        * find / -delete -name 'nmsl*' -type f  会删除所有文件
+  
+    * user-defined actions
+  
+      * 利用\-exec,详见man
+  
 
 
 ## 2.4 退出当前shell会话
