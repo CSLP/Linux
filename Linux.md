@@ -565,11 +565,45 @@
     | Debian-Style                             | dpkg            | apt              |
     | Fedora, Red Hat Enterprise Linux, CentOS | rpm             | yum              |
 
+# 6. 管理存储介质
 
+> Manage Storage Media
 
+### 6.1 挂载和卸载存储设备
 
+* 要想访问存储设备内容，必须将其挂载到Linux文件树中。
+* 现代Linux系统可以自动挂载，卸载可移动存储设备
+* /etc/fstab
+  * 文件列出了系统启动时要挂载的设备(典型的就是硬盘分区)
+  * ![](pics/Linux/fstab.png)
+    * 可以看到两个分区，一个挂载到了根目录/,一个挂载到了/boot/efi，并且用UUID名来表示分区
+    * 默认应该有个swap分区挂载到/swapfile,但是当时我觉的必须要，爷内存够大，所以就没创建swap分区。
 
+### 6.2 Linux设备、分区和文件系统
 
+* Linux支持的文件系统
+  * ext3, ext4, FAT16 (msdos), FAT32 (vfat), NTFS (ntfs), CD-ROM (iso9660), etc.
+  
+* /dev
+  * 列出了所有Linux的设备名字，我们主要关注以下两类：
+    * nvme开头表示固态硬盘相关
+    * sd开头表示机械硬盘和U盘等
+    
+  * ![](pics/Linux/myDev.png)
+  
+    * nvme
+  
+      * nvme0表示第一块固态的主控芯片
+  
+      * nvme0n1表示第一块固态的主存储器
+      * nvme0n1p1  表示第一块固态硬盘的第一个分区。
+      * 如图对应我的三块固态硬盘nvme0, nvme1, nvme2
+      * 使用分区工具或者挂载时使用的设备名字，要用nvme0n1也就是主存储器的名字，而不是nvme0
+  
+    * sd
+  
+      * sda表示我的4T西数机械，sda1,sda2表示两个分区
+      * sdb表示我的闪迪U盘， sdb1,sdb2表示两个分区。
 
 
 

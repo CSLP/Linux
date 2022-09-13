@@ -213,7 +213,9 @@
 
 * 打印当前日期
 
-## 2.2 存储相关
+## 2.2 存储介质相关
+
+#### 2.2.1 使用情况相关
 
 ###### df (disk free)
 
@@ -222,6 +224,51 @@
 ###### free
 
 * 内存使用情况
+
+#### 2.2.2 挂载相关
+
+> 想访问存储设备，必须将其挂载到Linux文件树中。最好挂载到空目录，当然挂载到非空目录也行，这样也不会丢失目录原来的数据，但是会隐藏不可见，直到卸载掉该设备
+
+###### mount
+
+* **NAME**
+
+  * mount - mount a filesystem
+
+* **SYNOPSIS**
+
+  * mount -t <u>type</u> <u>device</u> <u>dir</u>
+
+* **DESCRIPTION**
+
+  > This tells the kernel to attach the filesystem found on <u>device</u> (which is of type <u>type</u>) at the directory <u>dir</u>.  The option  -t <u>type</u> is optional.  The mount command is usually able to detect a filesystem.  The root permissions are necessary to mount a filesystem by default.  See section "Non-superuser mounts" below for more details.  The previous  contents  (if  any)  and  owner  and  mode of <u>dir</u> become invisible, and as long as this filesystem remains mounted, the pathname <u>dir</u> refers to the root of the filesystem on <u>device</u>.
+
+  * mount /dev/sdb  /mnt/Sandisk
+
+###### umount
+
+* umount /dev/sdb
+
+#### 2.2.3 分区和文件系统相关
+
+###### fdisk
+
+> 分区管理工具，类似Windows下的磁盘管理工具或者说diskgenius
+
+* fdisk  <u>device</u>
+
+  * 进入交互界面，可以实现各种分区管理功能。
+
+  * sudo fdisk /dev/nvme0n1
+    * 然后输入p(print)
+      * 就可以显示固态硬盘1的各种分区信息。
+
+###### mkfs(make file system)
+
+> 格式化分区创建新的文件系统
+
+* sudo mkfs  -t ext4 /dev/nvme0n1p2
+  * 格式化固态的第二个分区并创建ext4文件系统
 
 ## 2.3 文件系统相关
 
