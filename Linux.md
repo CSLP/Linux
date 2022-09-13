@@ -583,12 +583,10 @@
 
 * Linux支持的文件系统
   * ext3, ext4, FAT16 (msdos), FAT32 (vfat), NTFS (ntfs), CD-ROM (iso9660), etc.
-  
 * /dev
   * 列出了所有Linux的设备名字，我们主要关注以下两类：
     * nvme开头表示固态硬盘相关
     * sd开头表示机械硬盘和U盘等
-    
   * ![](pics/Linux/myDev.png)
   
     * nvme
@@ -599,11 +597,27 @@
       * nvme0n1p1  表示第一块固态硬盘的第一个分区。
       * 如图对应我的三块固态硬盘nvme0, nvme1, nvme2
       * 使用分区工具或者挂载时使用的设备名字，要用nvme0n1也就是主存储器的名字，而不是nvme0
-  
     * sd
-  
+    
       * sda表示我的4T西数机械，sda1,sda2表示两个分区
       * sdb表示我的闪迪U盘， sdb1,sdb2表示两个分区。
+
+# 7. 网络
+
+### 7.1 网络协议
+
+##### 7.1.1 应用层网络协议
+
+> 一般对应特定传输协议，就会有同名的利用该传输协议的程序。
+
+* telnet, ftp 。。。
+  * 这些都是老协议，数据明文传输
+* SSH(Secure Shell)
+  * 新协议，新增两个最重要的安全特性
+    * 服务器会认证(authenticate)客户端的身份
+    * 加密传输数据
+  * 需要SSH客户端程序和SSH服务端程序，服务端程序在TCP 22端口监听请求。
+  * 一般发行版提供了OpenSSH包，包括了实现ssh传输的所有功能，分为openssh-client和openssh-server.
 
 
 

@@ -1939,8 +1939,8 @@
 
   * | Option                    | Description                                                  |
     | ------------------------- | ------------------------------------------------------------ |
-    | apt update                | update is used to download package information from all configured sources.(配置的源就是配置的可用包仓库的位置，一般是URL)                                                              Other commands operate on this data to e.g. perform package upgrades or search in and display details about all packages available for installation. 简单来说跟git fetch差不多，只是拉取远程包仓库的包信息，方便后续操作。 |
-    | apt upgrade               | upgrade is used to install available upgrades of all packages currently installed on the system from the sources configured via sources.list(5).           New packages will be installed if required to satisfy dependencies, but         existing packages will never be removed. If an upgrade for a package           requires the removal of an installed package the upgrade for this           package isn't performed. |
+    | apt update                | update is used to download package information from all configured sources.(配置的源就是配置的可用包仓库的位置，一般是URL)                                                              Other commands operate on this data to e.g. perform package upgrades or search in and display details about all packages available for installation. 简单来说跟git fetch差不多，只是拉取远程包仓库的包信息，方便后续操作。(更新。 看看有啥更新。(不执行更新)) |
+    | apt upgrade               | upgrade is used to install available upgrades of all packages currently installed on the system from the sources configured via sources.list(5). New packages will be installed if required to satisfy dependencies, but  existing packages will never be removed. If an upgrade for a package  requires the removal of an installed package the upgrade for this  package isn't performed.简单来说，根据apt update的更新，执行实际的升级动作 |
     | apt install <u>PKG</u>... | 如果包没安装，那么安装，如果安装了，那么升级。               |
     | apt purge <u>PKG</u>...   | 如果包已经卸载，清理包的残留配置文件(只会清理不在家目录里面的配置文件)，如果包没卸载，卸载包同时清理配置文件。 |
     | apt remove <u>PKG</u>...  | 卸载包不清理残留配置文件，想清理加--purge参数，或者执行后apt purge |
@@ -1972,6 +1972,211 @@
     | dpkg --status <u>PKG</u> | 列出已安装包的状态。                                         |
 
     
+
+
+
+## 2.10 网络相关
+
+###### ping
+
+* **NAME**
+
+  * ping - send ICMP ECHO_REQUEST to network hosts
+
+* **SYNOPSIS**
+
+  * ping [<u>OPTIONS</u>]   <u>DESTINATION</u>
+
+* **DESCRIPTION**
+
+  > ping uses the ICMP protocol's mandatory ECHO_REQUEST datagram to elicit an ICMP ECHO_RESPONSE from a host or gateway. ECHO_REQUEST datagrams (“pings”) have an IP and ICMP header, followed by a struct timeval and then an arbitrary number of “pad” bytes used to fill out the packet.
+  >
+  > mandatory  [ˈmændətɔːri] a.强制性的
+  >
+  > datagram		数据报(根据telegram  [ˈtelɪɡræm] 电报造的词)
+  >
+  > elicit    [iˈlɪsɪt] vt. 引起，诱出。
+  >
+  > arbitrary [ˈɑːrbɪtreri] a.任意的，随意的，武断的，专横的，专制的
+
+  * ping没反应，两方面原因
+    * 网络不同
+    * 服务器防火墙屏蔽ping包或拒绝回应
+
+###### traceroute
+
+* **NAME**
+  * raceroute - print the route packets trace to network host
+* **SYNOPSIS**
+* **DESCRIPTION**
+  * 打印每一跳(hop)的路由信息，路由信息由路由器配置，如果不配置，那么什么也看不到，用一串星号代替。
+
+###### netstat
+
+> 默认没装，此工具在net-tools包中，安装这个包就行了
+
+* **NAME**
+
+  * netstat  -  Print network connections, routing tables, interface statistics, masquerade connections, and multicast memberships.
+    * masquerade [ˌmæskəˈreɪd] n.掩藏，掩饰 vi.  伪装
+
+* **SYNOPSIS**
+
+  * netstat [<u>OPTONS</u>]
+  * netstat  -r  [<u>OPTONS</u>]
+  * netstat  -g  [<u>OPTONS</u>]
+  * netstat  -i   [<u>OPTONS</u>]
+  * netstat  -M [<u>OPTONS</u>]
+  * netstat  -s  [<u>OPTONS</u>]
+
+* **NOTES**
+
+  > This  program  is mostly obsolete.  Replacement for **netstat** is ss.  Replacement for **netstat -r** is **ip route**.  Replacement for **netstat -i** is **ip -s** link.  Replacement for **netstat -g** is **ip maddr**.
+  >
+  > obsolete [ˌɑːbsəˈliːt]  a.淘汰的，过时的，废弃的
+
+  * 可能就是因为netstat显示网络的一切信息，不够专一，所以设计了专门针对某个网络方面的命令来替代它吧，所以淘汰了。
+
+* **DESCRIPTION**
+
+  > Netstat prints information about the Linux networking subsystem.  The type of information printed is controlled by the first argument, as follows:
+
+  * netstat是一个多功能命令，可以显示Linux网络的一切信息。所以按照第一个输入参数的不同，主要将netstat分成6类命令，分别显示网络的一个方面的内容。
+
+    * | Aspect           |                                                              |
+      | ---------------- | ------------------------------------------------------------ |
+      | none(省略)       | By  default, <u>netstat</u> displays a list of open sockets.  If you don't specify any address families, then the active sockets of  all configured address families will be printed. |
+      | --route, -r      | Display the kernel routing tables. See the description in <u>route</u>(8) for details.  **netstat -r** and **route -e**  produce  the  same output. |
+      | --groups, -g     | Display multicast group membership information for IPv4 and IPv6. |
+      | --interfaces, -i | Display a table of all network interfaces.(网络接口，可以理解为网卡，包括实际的和虚拟的) |
+      | --masquerade, -M | Display a list of masqueraded connections.                   |
+      | --statistics, -s | Display summary statistics for each protocol.                |
+
+* **Common Usage**
+
+  * -ie
+    * interface extend
+    * 显示所有网络接口扩展信息
+      * ![](pics/CLI/networkInterface.png)
+      * enp4s0 有线以太网网络接口
+      * lo  本地回环网络接口
+      * wlo1   无线以太网网络接口
+      * UP表示接口可用，RUNNING表示正在使用中，所以有IP地址，无线网卡没用，所以没有IP地址。
+
+###### ftp(file transfer program)
+
+* 利用FTP(file transfer protocol)协议传输数据的程序或者说客户端。
+* FTP协议不安全，从远程主机上传(upload)下载(download)时明文传输账户名密码，所以现在一般都是匿名FTP服务器，然后所有人都可以下载，用户名一般是anonymous,然后密码随意。
+* lftp
+  * 更好的ftp客户端，支持多种协议(http, ftp ...)，多了一些有用的特性。。。
+
+###### wget
+
+* **NAME**
+
+  * Wget - The non-interactive network downloader.
+
+* **SYNOPSIS**
+
+  * wget [<u>option</u>]... [<u>URL</u>]...
+
+* **DESCRIPTION**
+
+  * > GNU Wget is a free utility for non-interactive download of files from the Web.  It supports HTTP, HTTPS, and FTP protocols, as well as retrieval through HTTP proxies.
+    >
+    > as well as 也，还可以，此外
+    >
+    > retrieve [rɪˈtriːv] vt. 检索，取回；找回；检索数据。 retrieval n. 检索
+
+  * > Wget is non-interactive, meaning that it can work in the background, while the user is not logged on.  This allows you to start a retrieval and disconnect from the system, letting Wget finish the work.  By contrast, most of the Web browsers require constant user's presence, which can be a great hindrance when transferring a lot of data.
+    >
+    > hindrance [ˈhɪndrəns]  n. 妨碍，障碍，阻挠。
+
+  * > Wget can follow links in HTML, XHTML, and CSS pages, to create local versions of remote web sites, fully recreating the directory structure of the original site.  This is sometimes referred to as "recursive downloading."  While doing that, Wget respects the Robot Exclusion Standard (/robots.txt).  Wget can be instructed to convert the links in downloaded files to point at the local files, for offline viewing
+
+  * > Wget has been designed for robustness over slow or unstable network connections; if a download fails due to a network problem, it will keep retrying until the whole file has been retrieved.  If the server supports regetting, it will instruct the server to continue the download from where it left off.
+    >
+    > robust [roʊˈbʌst]  a. 强健的， 强壮的，强劲的，结实的，耐用的，坚固的
+    >
+    > robustness [roʊˈbʌstnəs]  n. 鲁棒性，坚固性，健壮性
+
+###### ssh(secure shell)
+
+* **NAME**
+
+  * ssh — OpenSSH remote login client
+
+* **SYNOPSIS**
+
+  * ssh [<u>OPTIONS</u>] <u>destination</u>
+
+* **DESCRIPTION**
+
+  > **ssh** (SSH client) is a program for logging into a remote machine and for executing commands on a remote machine.  It is intended to provide secure encrypted communications between two untrusted hosts over an insecure network.  X11 connections, arbitrary TCP ports and UNIX-domain sockets can also be forwarded over the secure channel.
+  >
+  > arbitrary 任意的
+  >
+  >  **ssh** connects and logs into the specified <u>destination</u>, which may be specified as either **[user@]hostname** or a URI of the form **ssh://[user@]hostname[:port].**  The user must prove his/her identity to the remote machine using one of several methods (see below).
+
+  * ssh -p 63000 VultrLinuxLP@45.32.228.178 
+    * 我的服务器22端口关了，用63000端口监听，所以这里指定一下
+    * 第一次连接某个远程主机会出现：
+      * ![](pics/CLI/firstSSH.png)
+      * SSH 协议服务端会认证客户端，同理客户端也可以认证服务端，第一次连接服务端，客户端没有这个服务端的信息，所以会提示，选择yes之后，客户端就会保留这个服务端的fingerprint，相当于就认识这个服务端了。
+      * 服务端fingerprint保存在\~/.ssh/known_ho
+      * 下次连接同样的IP地址，如果有人中间人攻击，想将我们导向别的服务器，那么SSH就会提示我们fingerprint不匹配，即我们连接的不是我们想要连接的那个服务器。
+      * 当然还有一种可能性是我们要连接的服务器重装系统或者SSH服务端了。
+
+  ###### scp(secure copy)
+
+  * **NAME**
+
+    * scp — OpenSSH secure file copy
+
+  * **SYNOPSIS**
+
+    * scp [<u>OPTIONS</u>] <u>scource</u>...<u>targe</u>
+
+  * **DESCRIPTION**
+
+    > scp copies files between hosts on a network.  It uses ssh(1) for data transfer, and uses the same authentication and provides the same security as ssh(1).  scp will ask for passwords or passphrases if they are needed for authentication.
+    >
+    > The <u>source</u> and <u>target</u> may be specified as a local pathname, a remote host with optional path in the form [user@]host:[path], or a URI in the form scp://[user@]host\[:port][/path].  Local file names can be made explicit using absolute or relative pathnames to avoid scp treating file names containing ‘:’ as host specifiers.
+
+    * 用法跟本地cp一样，却别就是带分号的路径是远程主机的文件。
+      * scp -P 63000 VultrLinuxLP@45.32.228.178:~/xray_log/access.log   ~
+        * 在本机执行这条命令，把远程主机上的access.log文件复制到本地家目录。
+
+  ###### sftp(secure ftp)
+
+  > 服务端不需要是FTP服务器(即运行ftp服务端的服务器)，只需要是运行SSH服务端的服务器就可以通过该命令来实现类似ftp的下载功能。
+
+  * **NAME**
+
+    * sftp — OpenSSH secure file transfer
+
+  * **SYNOPSIS**
+
+    * sftp [<u>OPTIONS</u>]  <u>destination</u>
+
+  * **DESCRIPTION**
+
+    > sftp is a file transfer program, similar to ftp(1), which performs all operations over an encrypted ssh(1) transport.  It may also use many features of ssh, such as public key authentication and compression.
+    >
+    > The destination may be specified either as [user@]host[:path] or as a URI in the form sftp://[user@]host\[:port][/path].
+
+    * 以下是利用sftp从服务器下载access.log
+      * ![](pics/CLI/sftp.png)
+
+  ###### 注
+
+  * ssh, scp, sftp都是由OpenSSH包提供的实现SSH协议传输数据的客户端程序，上述这些命令仅适用于客户端程序。
+
+## 2.30 复制
+
+* **NAME**
+* **SYNOPSIS**
+* **DESCRIPTION**
 
 # 3. shell展开(expansion)
 
@@ -2367,19 +2572,4 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-* apt update   
-  * update，更新。 看看有啥更新。(不执行更新)
-* apt upgrade
-  * 根据apt update的更新，执行实际的升级动作
 
