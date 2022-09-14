@@ -270,6 +270,17 @@
 * sudo mkfs  -t ext4 /dev/nvme0n1p2
   * 格式化固态的第二个分区并创建ext4文件系统
 
+###### fsck(file system check)
+
+> 文件系统完整型检查，修复受损的文件系统
+
+* sudo fsck /dev/nvme0n1p2
+  * 检查固态0分区2上的文件系统完整性
+
+###### dd
+
+> 以数据块的方式copy文件。(硬盘底层的数据传输就是利用数据块的形式)
+
 ## 2.3 文件系统相关
 
 ### 2.3.1 目录树
@@ -551,7 +562,7 @@
 
 #### 2.3.2.2 文件读写
 
-##### 1. 文本RW
+##### 1. 文本处理
 
 > 这里的文本可以是文本文件中的文本、stdin键盘输入的文本、管道重定向stdin的上游命令的stdout的文本。
 
@@ -689,7 +700,7 @@
     | -c, --bytes | 只显示字节数 |
 
 
-###### grep(global regular expression)
+###### grep(global regular expression print)
 
 * **NAME**
 
@@ -706,18 +717,25 @@
   > A FILE of “-” stands for  standard  input.   If  no  FILE  is  given,  recursive searches  examine the working directory, and nonrecursive searches read standard input.
   
   * 接受stdin或者文件的文本，然后输出匹配给定模式(PATTERNS)的文本行。
-  * PATTERN可以是字符串或者正则表达式。
-  * 如果给出的pattern不会由shell进行展开，例如grep  x test.txt, 可以不加引号，如果给出的pattern包含可能会引发shell展开的符号，那么一定要加引号，**最好单引号**，因为单引号内的所有内容shell都不会展开，如果是双引号则例如美元符号shell依然会展开。
+  * PATTERN可以是字符串或者正则表达式。默认只支持BRE(basic regular expression)
+  * 如果给出的pattern不会由shell进行展开，例如grep  x test.txt, 可以不加引号，如果给出的pattern使用正则表达式包含可能会引发shell展开的符号，那么一定要加引号，**最好单引号**，因为单引号内的所有内容shell都不会展开，如果是双引号则例如美元符号shell依然会展开。
     * grep 'x*' test.txt 
       * 加了单引号，shell把 x\* 作为一个参数传递给grep
       * 如果不加，假设该目录下有文件 xxx, xccc.  那么shell会将命令展开为grep xxx xccc test.txt， 完全脱离本意。
   
 * **Conmmon Option**
 
-  * | Options            | Description                                                  |
-    | ------------------ | ------------------------------------------------------------ |
-    | -i,--ignore-case   | 匹配时忽略大小写                                             |
-    | -v, --invert-match | Invert the sense of matching, to select non-matching lines.就是输出不匹配的那些行 |
+  * | Options                     | Description                                                  |
+    | --------------------------- | ------------------------------------------------------------ |
+    | none                        | 默认状态下输出包含模式的所有行，如果是多个文件，输出文件名加该文件中的匹配行 |
+    | -E,--extended-regexp        | 增加对ERE(扩展的正则表达式)的支持。默认只支持BRE。           |
+    | -i,--ignore-case            | 匹配时忽略大小写                                             |
+    | -v, --invert-match          | Invert the sense of matching, to select non-matching lines.就是输出不匹配的那些行 |
+    | -c, --count                 | 只输出匹配的行的个数                                         |
+    | -l,  --files-with-matches   | 多个文件时，只输出包含匹配行的文件名，不输出具体的匹配行     |
+    | -L, --files-without-matches | 多个文件时，只输出不包含匹配行的文件名                       |
+    | -n, --line-number           | 输出匹配行在文件中的行数                                     |
+    | -h                          | 多个文件时，只输出匹配行，不输出文件名                       |
 
 
 ###### tee
@@ -776,8 +794,8 @@
       * 上一页
     * =
       * 显示当前阅读进度
-    * \/
-      * 搜索，n下一个匹配，N上一个匹配
+    * /
+      * 搜索，n下一个匹配，N上一个匹配,支持正则表达式，跟vim搜索一样
 
 ###### 总结
 
@@ -983,6 +1001,8 @@
   * 搜索Linux维护的相关数据库里面匹配模式的文件或目录。
     * 该数据库一般一天刷新一次，所以搜索结果不是实时的，搜索出来的文件可能不存在，刚创建的文件也可能搜不到。
     * updatedb手动刷新一次数据库，这样搜索出来的就是最新的了。
+  * 默认状态下支持统配符，只要文件完整路径名包含模式即可。
+  * locate --regex <u>PATTERN</u> 支持正则表达式，类似grep，只要文件完整路径名包含该模式即可。
 
 ###### find
 
@@ -1050,16 +1070,26 @@
   
       > -name 大小写敏感， -iname大小写不敏感(ignore case)
   
-      * 递归查找目录下所有名字为pattern的文件，支持globbing通配符。
+      * 递归查找目录下所有名字为pattern的文件，支持通配符，要求完全匹配。
   
         * find / -name Linux
-          * 查找根目录下名为Linux的文件，需要注意的是find是完全匹配，只匹配那些文件名为Linux的文件。而locate Linux实际相当于 locate \*Linux\*, 本质上是匹配文件名包含Linux的文件。
+          * 查找根目录下名为Linux的文件，需要注意的是find是完全匹配，只匹配那些文件名为Linux的文件。而locate 则是只要文件完整路径名包含模式就算匹配。
         * find / -name \*Linux
         * find / -name \*Linux\*
         * find / -name ?Linux
   
-    * -size  [+-]<u>n</u>[cwbkMG]
+    * -regxp  <u>pattern</u>
   
+      * 递归查找，支持正则表达式，注意find查找是从开始点开始的完整路径，而且要求这个完整路径精确匹配正则表达式，而不是像grep只需行包含这个正则表达式匹配的模式就行了。
+      * eg，假设当前目录下有个bin文件
+        * find .  -regex   'bin+'
+          * 查找失败，因为find真正扫描的是完整路径\./bin ，而不是bin，所以不匹配bin+
+        * find  . -regex  '.*bin+'
+          * 这样就可以了。
+      * 因为find要求精确匹配完整路径，然而我们只考虑单纯文件名，我们可以这样 '.\*pattern'在我们真正想匹配的模式前加上.\*,就可以忽略前面的所有路径了。
+    
+    * -size  [+-]<u>n</u>[cwbkMG]
+    
       * 递归查找目录下所有符合大小条件的文件
       * \+ 大于 \-小于， 省略，等于。
       * c(bytes) w(two bytes words) k(KiB) M(MiB) G(GiB) 
@@ -1067,7 +1097,7 @@
           *  查找/var中大小大于10M的名为nmsl的常规文件
   
   
-    
+  
   
     * -atime <u>n</u>
   
@@ -1204,7 +1234,10 @@
   > GNU **tar** is an archiving program designed to store multiple files in a single file (an **archive**), and to manipulate such archives.   The  archive  can  be either a regular file or a device (e.g. a tape drive, hence the name of the program, which stands for **t**ape archiver), which can be located either on the local or on a remote machine.
 
   * 传统的tar只能打包解包，现在的tar可以同时打包压缩和解压缩解包。
+
   * 打包目的是方便压缩，方便备份，方便网络传输(例如打包后就可以利用scp,sftp等传输目录了)
+
+  * tar归档后的文件也可以叫做包(tarball)
 
   * 首先解释以下上述复杂的SYNOPSIS，很好理解，两个方面
 
@@ -2697,7 +2730,7 @@
 | EDITOR  | The name of the program to be used for text editing.         |
 | SHELL   | The name of your shell program.                              |
 | HOME    | The pathname of your home directory.                         |
-| LANG    | Defines the character set and collation order of your language.(字符集和编码) |
+| LANG    | Defines the character set and collation order of your language.(字符集和编码)。例如我的Ubuntu是 en_US.UTF-8表示字符集是en_US，使用的编码是UTF-8 |
 | OLD_PWD | The previous working directory.                              |
 | PAGER   | The name of the program to be used for paging output. This is often set to /usr/bin/less. |
 | PATH    | A colon-separated list of directories that are searched when you enter the name of a executable program.(**具有多个值的环境变量都是以冒号隔开**) |
