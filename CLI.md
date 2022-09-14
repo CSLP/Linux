@@ -560,9 +560,7 @@
 
   * interactive  互动的，人机交互的
 
-#### 2.3.2.2 文件读写
-
-##### 1. 文本处理
+#### 2.3.2.2 文本处理
 
 > 这里的文本可以是文本文件中的文本、stdin键盘输入的文本、管道重定向stdin的上游命令的stdout的文本。
 
@@ -572,17 +570,33 @@
   * cat - concatenate files and print on the standard output
     * 如果指明多个文件，那么**连接**多个文件并输出到标准输出
     * cat的关键是连接多个文件，查看简单单个文件只是它的一个小方面
+  
 * **SYNOPSIS**
   * cat [OPTION]... [<u>FILE</u>]...
+  
 * **DESCRIPTION**
   * Concatenate FILE(s) to standard output.
   * With no FILE, or when FILE is -, read standard input.
   * 将文本内容全部一次性输出到标准输出，如果内容超过一页，想看上面的需要借助鼠标滚到上面
   * cat接受的文件参数可以是普通文本文件也可以是stdin，从而也可以是通过管道来的别的程序的标准输出。
+  
 * **Common Option**
-  * -n, --number
-    * 给输出的内容加行号
+
+  * | Options        | Descriptiong                                                 |
+    | -------------- | ------------------------------------------------------------ |
+    | -n,--number    | 给输出的内容加行号                                           |
+    | -A, --show-all | 显示所有不可见字符。注意空格是可见字符，可以看到空白。TAB是不可见字符，因为无法区别这是TAB还是空格。 |
+
+    * 不可见字符的表示方法
+      * ^I    (大写i) 
+        * 字面意思表示Control I  ,巧了一般编辑中ctrl i就是TAB，所以用^I指代TAB
+      * $
+        * 表示\\n(LF)
+      * ^M
+        * 表示\\r(CR)
+
 * **TRICK**(trick 小技巧)
+
   * cat  >  test.txt
     * 不带参数的cat从stdin接受输入，然后输出到stdout，这里重定向stdout。就可以创建简单的文件的同时输入内容，比vim test.txt 简单许多。
     * 输入命令后，键入内容，然后Ctrl+d表示EOF，之后内容就写入test.txt中了。
@@ -639,10 +653,49 @@
   >  With no FILE, or when FILE is -, read standard input.
 
   * 跟cat一样，可以接受多个文件，cat是将它们依次连接然后全部输出到屏幕
-  * 而sort则是按照所有文件每一行首字母顺序输出所有文件的所有行。
+  * 而sort则是按照所有文件每一行第一个域排序。(默认是字典排序)
     * 可以理解为按行排序输出的cat
+  * sort的一堆参数的作用就是两个方面
+    * 指定排序那个域，甚至能指定排序那个域中的那个字符
+    * 指定排序方式(字典序、数值排序、升序降序。。。)
   * 同cat，sort接受的文件参数可以是普通文本文件也可以是stdin，从而也可以是通过管道来的别的程序的标准输出。
 
+* **Common Option**
+
+    * | Options            | Description                                                  |
+    | ------------------ | ------------------------------------------------------------ |
+    | -r, --reverse      | 反向排序                                                     |
+    | -n, --numeric-sort | 默认将数字看做字符串然后字典排序。加了这个选项按照数值大小升序排序。eg,前者排序结果 1004,12,143 后者排序12,143,1004 |
+    | -k                 | 默认按照行首字符排序，-k可以指定按照哪个域排序。默认域有空白符隔开 |
+    | -t                 | 定义域分隔字符，默认域由空格或制表符分隔。                   |
+  
+  * sort域机制详解
+  
+    * 所谓每行，可以包含许多信息，每个信息称为一个域。图形化界面下，看似每个文件名只有一个文件名参数，其实包含大小，访问时间等参数。GUI往往提供按照文件名排序或者按照大小排序等多种手段。每个域称为一个排序key，这个域的信息可以排序，比如文件名是一个key，大小是一个key。
+  
+    * 还有个典型例子就是数据库，比如学生成绩信息数据库，每个词条可以包括学生姓名，学号，总学分，总成绩，各科目成绩，这些每个都是一个域，且都可以作为排序key。
+  
+      * 查看界面往往提供了排序查看功能，比如按照总学分降序显示，总成绩升序显示等等。
+      * 还可以按照key优先级排序查看，例如按总成绩降序显示，如果总成绩相同，那么按照总学分降序排序。
+  
+    * sort提供了以上所有功能和一些更强大的功能，但是比较复杂，毕竟不是GUI点点点，接下来只介绍最简单的按照某个key排序。
+  
+      * 某文件所有行为这个形式 Tom    28，名字+成绩，那么sort用空白符号分隔域，所以在sort看来这是两个域，用1代表第一个域，2代表第二个域。
+  
+        * sort -k 2  file
+          * 表示按照字典排序排第二个域
+        * sort -k  2 -n file
+          * 表示按照数值大小升序排第二个域
+  
+      * /etc/passwd每一行都用冒号做分隔符号分隔域
+  
+        ```shell
+        test:x:1001:1001:caonima,book,110,120,caonima:/home/test:/bin/bash
+        ```
+  
+        * sort -t ':' -k 7 /etc/passwd
+          * 按照字典序排第七个域，指定域分隔符为冒号。
+  
 * **TRICK**
 
   * 排序文件内容(指改变文件内容使其有序而不是输出顺序内容到屏幕)
@@ -656,8 +709,10 @@
 
 * **NAME**
   * uniq - report or omit repeated lines
+  
 * **SYNOPSIS**
   * uniq [<u>OPTION</u>]... [<u>INPUT</u> [<u>OUTPUT</u>]]
+  
 * **DESCRIPTION**
   * Filter adjacent matching lines from INPUT (or standard input), writing to OUTPUT(or standard output).
   * 接受输入，然后去重后输出。
@@ -666,12 +721,90 @@
     * 输入文件(INPUT)可以是0个或者1个。
     * 0个表示接受stdin输入，也就是键盘输入或者管道输入。
   * OUTPUT
-    * OUTPUT文件可以是0个或一个，并且INPUT文件省略时，OUTPUT文件一定得省略，INPUT问件不省略时，OUTPUT文件可省可不省。
+    * OUTPUT文件可以是0个或一个，并且INPUT文件省略时，OUTPUT文件一定得省略，INPUT文件不省略时，OUTPUT文件可省可不省。
     * 为啥相比cat、sort等多了OUTPUT文件
       * cat、sort想要把输出结果写到文件中，要么得重定向stdout要不得加参数。而uniq原生支持，只需替换OUTPUT参数为要修改的文件即可。
+  
 * **Common Option**
-  * -d , --repeated
-    * 输出重复项是那些。
+
+  * | Option          | Description                    |
+    | --------------- | ------------------------------ |
+    | -c              | 输出每行，且输出每行出现的次数 |
+    | -d , --repeated | 输出重复项是那些。             |
+
+
+###### dos2unix、unix2dos
+
+* 互转Windows和Unix风格的文件，就是转换\\n\\r和\\n.
+
+###### cut
+
+* **NAME**
+
+  * cut - remove sections from each line of files	
+
+* **SYNOPSIS**
+
+  * cut <u>OPTION</u>... [<u>FILE</u>]...
+
+* **DESCRIPTION**
+
+  > **Print selected parts of lines from each FILE to standard output.**
+  >
+  > With no FILE, or when FILE is -, read standard input.
+
+  * 很简单，就是选择文件中你想输出的部分输出到屏幕。一般是纵向角度。
+  * 也跟sort一样，区分域，这样就可以只输出某一个域的信息，区别是默认域分隔符是TAB而不是空白。
+  * 常用于处理十分规整的文本文件。
+
+* **Common Option**
+
+  * | Option          | Description                                            |
+    | --------------- | ------------------------------------------------------ |
+    | -c <u>RANGE</u> | 以字符为单位，抽取RANGE指示的那些列。(TAB算作一个字符) |
+    | -f <u>RANGE</u> | 以域为单位，抽取RANGE指示的那些域                      |
+    | -d  delim_char  | 指定分隔符                                             |
+
+  * RANGE常见形式
+
+    * n-m
+      * 表示第n~m列或第n~m域
+    * n-
+      * n到最后一列或域
+    * -n
+      * 第一列或域到第n列或域
+    * n
+      * 第n列或域
+    * n,m
+      * 第n或m(列或域)
+
+  * eg(文件每行都是如下形式空白是TAB)
+
+    * LiPeng   201630710571   100 3.7
+      * cut -c  3-5
+        * 列出3~5列的内容，这一行的话就列出Pen
+      * cut -f 2
+        * 列出第二个域，这行列出201630710571
+      * cut -d ':'   -f 2 /etc/passwd
+        * 列出该文件的第二个域
+
+###### paste
+
+* **NAME**
+
+  * paste - merge lines of files
+
+* **SYNOPSIS**
+
+  * paste [<u>OPTION</u>]... [<u>FILE</u>]...
+
+* **DESCRIPTION**
+
+  > Write  lines  consisting  of the sequentially corresponding lines from each FILE, separated by TABs, to standard output.
+  >
+  > With no FILE, or when FILE is -, read standard input.
+
+  * 简而言之，任意纵向抽取多个文件的域或列然后组合输出。
 
 ###### wc(word count)
 
@@ -736,6 +869,7 @@
     | -L, --files-without-matches | 多个文件时，只输出不包含匹配行的文件名                       |
     | -n, --line-number           | 输出匹配行在文件中的行数                                     |
     | -h                          | 多个文件时，只输出匹配行，不输出文件名                       |
+
 
 
 ###### tee
@@ -2227,6 +2361,7 @@
     | ------------------------- | ------------------------------------------------------------ |
     | apt update                | update is used to download package information from all configured sources.(配置的源就是配置的可用包仓库的位置，一般是URL)                                                              Other commands operate on this data to e.g. perform package upgrades or search in and display details about all packages available for installation. 简单来说跟git fetch差不多，只是拉取远程包仓库的包信息，方便后续操作。(更新。 看看有啥更新。(不执行更新)) |
     | apt upgrade               | upgrade is used to install available upgrades of all packages currently installed on the system from the sources configured via sources.list(5). New packages will be installed if required to satisfy dependencies, but  existing packages will never be removed. If an upgrade for a package  requires the removal of an installed package the upgrade for this  package isn't performed.简单来说，根据apt update的更新，执行实际的升级动作 |
+    | apt search name           | 搜索与名字相关的包                                           |
     | apt install <u>PKG</u>... | 如果包没安装，那么安装，如果安装了，那么升级。               |
     | apt purge <u>PKG</u>...   | 如果包已经卸载，清理包的残留配置文件(只会清理不在家目录里面的配置文件)，如果包没卸载，卸载包同时清理配置文件。 |
     | apt remove <u>PKG</u>...  | 卸载包不清理残留配置文件，想清理加--purge参数，或者执行后apt purge |
