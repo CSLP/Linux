@@ -1175,6 +1175,177 @@
   * ls -a /usr/bin | sort | uniq | tee file1 | grep 'x*'
     * 利用tee命令，将中间阶段即uniq之后的文本处理结果写入到file1.
 
+###### 格式化输出
+
+###### nl(number line)
+
+* **NAME**
+
+  * nl - number lines of files
+
+* **SYNOPSIS**
+
+  * nl [<u>OPTION</u>]... [FILE]...
+
+* **DESCRIPTION**
+
+  > Write each FILE to standard output, with line numbers added.
+  >
+  >  With no FILE, or when FILE is -, read standard input.
+
+  * 总之就是花式给文本加行数显示然后输出到stdout。
+
+###### fold
+
+> fold [foʊld] v.折叠
+
+* **NAME**
+
+  * fold - wrap each input line to fit in specified width
+
+* **SYNOPSIS**
+
+  * fold [<u>OPTION</u>]... [<u>FILE</u>]...
+
+* **DESCRIPTION**
+
+  > Wrap input lines in each FILE, writing to standard output.
+  >
+  > With no FILE, or when FILE is -, read standard input.
+
+  * 限制文本行宽，然后输出到stdout.
+  * 超过指定行宽的，自动加换行符切换到下一行。
+
+* **Common Option**
+
+  * | Option          | Descript                                                     |
+    | --------------- | ------------------------------------------------------------ |
+    | -w <u>WIDTH</u> | 限宽为几个字符，默认80个字符                                 |
+    | -s，--space     | 不加这个参数,严格限宽，末尾单词可能会被拆分到下一行，加了这个参数，如果遇到空格后面单词会被限宽拆分，那么就会让这个单词整体进入下一行。总之增加的 -s 选项将让 fold 分解到最后可用的空白 字符，即会考虑单词边界。 |
+
+* **Common Usage**
+
+  * echo  wrap input lines in each  |   fold -s  -w 8 
+    * 最多8个字符一行，考虑单词边界然后输出。
+
+###### fmt(format)
+
+* **NAME**
+
+  * fmt - simple optimal text formatter
+
+* **SYNOPSIS**
+
+  * fmt [-<u>WIDTH</u>] [<u>OPTION</u>]... [FILE]...
+
+* **DESCRIPTION**
+
+  > Reformat  each  paragraph in the FILE(s), writing to standard output.  The option -WIDTH is an abbreviated form of --width=DIGITS.
+  >
+  > With no FILE, or when FILE is -, read standard input.
+
+  * 可以说是一个简易排版工具，所谓排版就是格式化文本吧。
+
+###### pr
+
+* **NAME**
+
+  * pr - convert text files for printing
+
+* **SYNOPSIS**
+
+  * pr [<u>OPTION</u>]... [<u>FILE</u>]...
+
+* **DESCRIPTION**
+
+  > Paginate or columnate FILE(s) for printing.
+  >
+  >  With no FILE, or when FILE is -, read standard input.
+
+  * 给文本分页(paginate v.)或加页眉页脚(header,footer).
+  * 简而言之，简单排版工具，或者说格式化文件工具。
+
+###### groff
+
+* 继承自roff，强大的命令行文件排版工具，不过现在谁还用这个啊，都是GUI文件处理工具，输入文本同时排版，高效的一比。
+
+###### printf(print formatted)
+
+> 为C语言设计，广泛用于其他语言，同样用于shell，在shell中是内建命令
+>
+> format [ˈfɔːrmæt]  v. 格式化，安排...的版式
+
+* **NAME**
+
+  * printf - format and print data
+
+* **SYNOPSIS**
+
+  * printf <u>FORMAT</u> [<u>ARGUMENT</u>]...
+  * printf <u>OPTION</u>
+
+* **DESCRIPTION**
+
+  > Print ARGUMENT(s) according to FORMAT, or execute according to OPTION
+
+  * printf不接受stdin
+
+  * 常用于脚本来格式化表格数据(tabular d)
+
+  * <u>FORMAT</u>中包含三类内容
+
+    * 原义文本(literal)
+
+      * 原样输出
+
+    * 转义字符(escape character)
+
+      * 输出对应控制字符。例如 \\n，对应换行符。
+
+    * 格式化规范(format specification )
+
+      * 表示如何格式化输出ARGUMENT部分的参数.
+
+      * FORMAT部分有一个规范，ARGUMENT部分就得有一个参数供格式化，总之一一对应。
+
+      * 为啥叫格式化规范，而不叫格式化字符，因为%d只是完整格式化规范的一部分，一个组件。
+        * 完整的规范形式：%\[flags\]\[width\]\[\.precision\]conversion_specification
+        * 此处conversion_sepcification转化规范就指具体的 d,f, o, s 。。。如下。
+
+      * | Component | Description                                       |
+        | :-------- | :------------------------------------------------ |
+        | %d        | decimal integer. 将数字格式化为带符号十进制数字。 |
+        | %f        | floating point number.格式化为浮点数输出。        |
+        | %o        | 将整数格式化为八进制输出                          |
+        | %s        | 格式化输出字符串                                  |
+        | %x        | 将整数格式化为十六进制输出(a-f用小写)             |
+        | %X        | 同%x，a-f用大写                                   |
+        | %%        | 输出%本身                                         |
+
+      * | Component  | Description                                                  |
+        | :--------- | :----------------------------------------------------------- |
+        | flags      | 有5种不同的标志:<br /># :使用“备用格式”输出。这取决于数据类型。对于o（八进制数）转换，输出以0为前缀.对于x和X（十六进制数）转换，输出分别以0x或0X为前缀.<br/>0:(零) 用零填充输出。这意味着该字段将填充前导零，比如“000380”.<br/>- :(短横线) 左对齐输出。默认情况下，printf右对齐输出。<br />‘ ’ :(空格) 在正数前空一格。<br />+ : (加号) 在正数前添加加号。默认情况下，printf 只在负数前添加符号。 |
+        | width      | 指定最小字段宽度的数。                                       |
+        | .precision | 对于浮点数，指定小数点后的精度位数。对于字符串转换，指定要输出的字符数 |
+
+  * **格式转换例子**
+
+    * | Argument | Format    | Result     | Notes                                                        |
+    | :------- | :-------- | :--------- | :----------------------------------------------------------- |
+    | 380      | "%d"      | 380        | 简单格式化整数。                                             |
+    | 380      | "%#x"     | 0x17c      | 使用“替代格式”标志将整数格式化为十六进制数。                 |
+    | 380      | "%05d"    | 00380      | 用前导零（padding）格式化整数，且最小字段宽度为五个字符。    |
+    | 380      | "%05.5f"  | 380.00000  | 使用前导零和五位小数位精度格式化数字为浮点数。由于指定的最小字段宽度（5）小于格式化后数字的实际宽度，因此前导零这一命令实际上没有起到作用。 |
+    | 380      | "%010.5f" | 0380.00000 | 将最小字段宽度增加到10，前导零现在变得可见。                 |
+    | 380      | "%+d"     | +380       | 使用+标志标记正数。                                          |
+    | 380      | "%-d"     | 380        | 使用-标志左对齐                                              |
+
+* **NAME**
+
+* **SYNOPSIS**
+
+* **DESCRIPTION**
+
 ###### more
 
 * **NAME**
