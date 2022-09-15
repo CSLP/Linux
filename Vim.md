@@ -140,8 +140,7 @@ set hlsearch			"设置搜索高亮highlightsearch
         | \\{n,m}     | 放在字符或字符集合后面，表示字符匹配n~m次                    |
         | \\{n,}      | 放在字符或字符集合后面，表示字符匹配n~无穷次                 |
         | \\{,m}      | 放在字符或字符集合后面，表示字符匹配0~m次                    |
-        | \\|         | 表示匹配给定的竖线分开的字符串(或者说就是RegExp)集合中的任意一个 |
-        
+        | \\(\\) | 成组(Grouping) 。\\(bcd\\)\\+ ,匹配bcd, bcdbcd, bcdbcdbcd ... 。成组后，可以用\\1,\\2...代表先前出现的组。A\\(bcd\\)B\1  匹配AbcdBbcd |
         
     
   * ？pattern + ENTER
@@ -209,7 +208,7 @@ set hlsearch			"设置搜索高亮highlightsearch
 
 * :%/pattern/string/g
 
-  * 搜索支持正则表达式
+  * 搜索支持正则表达式，详见vim搜索部分。
 
 
 ### 3.4 保存退出

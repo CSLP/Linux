@@ -663,12 +663,13 @@
 * **Common Option**
 
     * | Options            | Description                                                  |
-    | ------------------ | ------------------------------------------------------------ |
-    | -r, --reverse      | 反向排序                                                     |
-    | -n, --numeric-sort | 默认将数字看做字符串然后字典排序。加了这个选项按照数值大小升序排序。eg,前者排序结果 1004,12,143 后者排序12,143,1004 |
-    | -k                 | 默认按照行首字符排序，-k可以指定按照哪个域排序。默认域有空白符隔开 |
-    | -t                 | 定义域分隔字符，默认域由空格或制表符分隔。                   |
-  
+      | ------------------ | ------------------------------------------------------------ |
+      | -r, --reverse      | 反向排序                                                     |
+      | -n, --numeric-sort | 默认将数字看做字符串然后字典排序。加了这个选项按照数值大小升序排序。eg,前者排序结果 1004,12,143 后者排序12,143,1004 |
+      | -u                 | 输出去重后的结果，相当于把uniq功能集成进来了                 |
+      | -k                 | 默认按照行首字符排序，-k可以指定按照哪个域排序。默认域有空白符隔开 |
+      | -t                 | 定义域分隔字符，默认域由空格或制表符分隔。                   |
+    
   * sort域机制详解
   
     * 所谓每行，可以包含许多信息，每个信息称为一个域。图形化界面下，看似每个文件名只有一个文件名参数，其实包含大小，访问时间等参数。GUI往往提供按照文件名排序或者按照大小排序等多种手段。每个域称为一个排序key，这个域的信息可以排序，比如文件名是一个key，大小是一个key。
@@ -731,11 +732,6 @@
     | --------------- | ------------------------------ |
     | -c              | 输出每行，且输出每行出现的次数 |
     | -d , --repeated | 输出重复项是那些。             |
-
-
-###### dos2unix、unix2dos
-
-* 互转Windows和Unix风格的文件，就是转换\\n\\r和\\n.
 
 ###### cut
 
@@ -805,6 +801,288 @@
   > With no FILE, or when FILE is -, read standard input.
 
   * 简而言之，任意纵向抽取多个文件的域或列然后组合输出。
+
+###### join
+
+* **NAME**
+
+  * join - join lines of two files on a common field
+
+* **SYNOPSIS**
+
+  * join [<u>OPTION</u>]... <u>FILE1</u> <u>FILE2</u>
+
+* **DESCRIPTION**
+
+  > For  each  pair of input lines with identical join fields, write a line to standard output.  The default join field is the first, delimited by blanks.
+  >
+  > When FILE1 or FILE2 (not both) is -, read standard input.
+
+  * 简而言之，类似数据库中的join操作，就是两个表有同一个域(key)，然后就可以连接这两个表输出。
+  * 只不过join这里是两个文件
+
+###### comm(common)
+
+* **NAME**
+
+  *  comm - compare two sorted files line by line
+
+* **SYNOPSIS**
+
+  * comm [<u>OPTION</u>]... <u>FILE1</u> <u>FILE2</u>
+
+* **DESCRIPTION**
+
+  > Compare sorted files FILE1 and FILE2 line by line.
+  >
+  > When FILE1 or FILE2 (not both) is -, read standard input.
+  >
+  > With  no options, produce three-column output.  Column one contains lines unique to FILE1, column two contains lines unique to FILE2, and column  three  contains lines **common to both files.**
+  >
+  > common a. 普通的， 共有的
+  >
+  > comm命令命名就来自于common，在这里是共有的意思。
+
+  * 很简单，比较两个排序文件，然后3列输出，分别是文件1独有，文件2独有，二者共有(common)的行。
+
+* **Common Option**
+
+  * -n
+
+    > -1     suppress column 1 (lines unique to FILE1)
+    >
+    > -2     suppress column 2 (lines unique to FILE2)
+    >
+    > -3     suppress column 3 (lines that appear in both files)
+    >
+    > suppress [səˈpres]  v.镇压，抑制，封锁
+
+    * n是几，代表不输出那些列
+
+###### diff
+
+> 强大的文本比较工具，比comm强太多了
+
+* **NAME**
+
+  * GNU diff - compare files line by line
+
+* **SYNOPSIS**
+
+  * diff [<u>OPTION</u>]... <u>FILES</u>
+
+* **DESCRIPTION**
+
+  > Compare FILES line by line
+  >
+  > FILES  are  'FILE1  FILE2'  or  'DIR1  DIR2'  or  'DIR  FILE' or 'FILE DIR'.
+  >
+  > If  a FILE is '-', read standard input.
+
+  * 最多支持两个文件或目录之间的比较
+    * 常用与比较文件，比较目录的话会列出每个目录独有的文件。
+
+* **Common Option**
+
+  * a,b两个测试文件如下，左面是a文件，右边是b文件。
+
+    * ![](pics/CLI/diff.png)
+    * 区别有三处，第一块，b比a删除了apple, 第二块b比a增加了cnm，第三块b修改了THE，增加了difference
+
+  * diff a  b
+
+    * ![](pics/CLI/diffab.png)
+      * 默认状态是向后兼容老的POSIXdiff，**核心思想就是描述了a经过怎样的变化就能变成b。**
+      * 默认形式就是每一处变化由 “range operation range”和实际变化内容两处组成，前者表示那个位置那种变化，后者表示变化内容。这张图距离,  1d0就是前者，< apple 就是后者。
+      * range  operation range ,第一个范围表示第一个文件，第二个范围表示第二个文件，operation有三种形式d(delete), a(add), c(change),表示增删改。知道了这个就一目了然了。
+      * 1d0
+        * 第一个文件第一行删除apple
+      * 7a7
+        * 第一个文件第七行 cnm增加到第二个文件第7行
+      * 13,14c13,14
+        * 第一个文件13~14行由上面的形式变为下面的形式成为第二个文件的13~14行。
+
+  * diff -c  a b
+
+    > -c  表示context format 上下文格式，就是不仅只展示变化的行，还包括了一定的上下行。
+
+    * ![](pics/CLI/diff-cab.png)
+    * \*\*\* a 表示文件a  因此 \*\*\* 1,14 \*\*\*\*表示文件a的1~14行, --- b, --- 1,14 ----同理
+    * 行前面
+      * \-表示相对另一个文件少了该行
+      * \+表示相对另一个文件多了该行
+      * \!表示相对另一个文件该行不一样
+
+  * diff -u  a b
+
+    > unified format 更简洁的context format形式，不重复显示共有行
+
+    * ![](pics/CLI/diff-uab.png)
+    * --- a表示a文件， +++ b表示b文件
+    * @@ -1,14 +1,14 @@表示上下文的范围， -1，14表示a文件的1~14行，+1,14表示b文件的1~14行
+    * diff -u的思想跟diff没参数一样，列出的变化是b-a也就是a文件经过这些变化就可以变成b文件。即列出的变化是b文件相对于a文件的变化。
+      * 减号表示删掉该行
+      * 加号表示加上该行
+    * 冷知识，git diff就是利用diff命令的这种模式显示变化
+      * ![](pics/CLI/gitdiff.png)
+
+###### patch
+
+> 补丁
+
+* 补丁程序，常常与diff配合用于更新文件，首先利用diff生成差异文件，描述了old_version和new_version之间的差异，然后调用patch程序利用差异文件写Old_verion使其和new_version一样。
+* 我估计git就用了这个技术。。
+
+###### tr
+
+* **NAME**
+
+  * tr - translate or delete characters
+
+    > translate v. 翻译；使转变，变为(翻译的本质就是转换，更本质就是映射)
+
+* **SYNOPSIS**
+
+  * tr [OPTION]... <u>SET1</u> [<u>SET2</u>]
+
+* **DESCRIPTION**
+
+  >  Translate,  squeeze,  and/or delete characters from standard input, writing to
+  >  standard output.
+  >
+  > squeeze [skwiːz]  v. 挤
+
+  * 就是字符级别的查找替换，就是把SET1指代的字符集统统替换为SET2指代的字符集。
+  * 注意是接受stdin的输入的文本然后替换输出到stdout
+
+* **Common Option**
+
+  * cat  file | tr  [:upper:]  [:lower]  > fileLower
+    * fileLower文件内容相当于file中全部大写变小写。
+  * cat windowsFile | tr -d ' \\r'  > unixFile
+    * unixFile相当于去掉所有回车符号的windowsFIle。
+  * echo "aaaabbbbccccc" | tr -s ab
+    * 结果为abccccc，-s squeeze, 删除相邻重复字符。
+
+###### sed(stream edit)
+
+* **NAME**
+
+  * sed - stream editor for filtering and transforming text
+
+* **SYNOPSIS**
+
+  * sed [<u>OPTION</u>]... {<u>script-only-if-no-other-script</u>} [<u>input-file</u>]...
+
+* **DESCRIPTION**
+
+  > Sed  is a stream editor.  A stream editor is used to perform basic text transformations on an input stream (a file or input from  a  pipeline).   While  in some  ways similar to an editor which permits scripted edits (such as ed), sed works by making only one pass over the input(s), and is consequently more  efficient.   But it is sed's ability to filter text in a pipeline which particularly distinguishes it from other types of editors.
+  >
+  > permit v.允许，许可
+  >
+  > distinguish [dɪˈstɪŋɡwɪʃ] v. 区别，区分
+
+  * 流编辑器
+
+    >  sed没那么神秘，就是一个流编辑器。可以接受文件输入，或者stdin,或者管道来的stdin.
+
+    * 普通的编辑器第一步就是要打开文件，然后进行各种编辑，要打开的核心目的就是引入光标，我们移动光标就定位到了文件要编辑的位置，然后编辑动作(增删改等)。
+    * sed没有打开动作，直接命令行执行，所以借助{<u>script-only-if-no-other-script</u>}这个部分指明编辑的位置以及动作。
+
+  * sed与cat等文本处理命令
+
+    > 其实cat, head, tail, sort,uniq,cut, paster,join,comm,diff,tr,tee等可以说都是所谓流编辑器，接受stdin或管道来的stdin或者文件的输入，然后经过"编辑"然后输出到stdout。
+
+    * 它们与sed的区别是它们往往只能实现单一的“编辑”功能，比如cat就只能原样输出，sort就只能排序输出，cut可以选择任意块输出。。。
+    * 而sed相当于集大成者，成为了真正意义上的编辑器，可以实现一切真正编辑器具有的编辑功能。
+
+  * sed与vim
+
+    * 都是编辑器，vim必须打开文件编辑，而sed直接流编辑，好处是可以利用管道这个无敌的特性，坏处是要输入复杂的参数来指定编辑范围与编辑操作。
+
+    * 例如实现修改file中所有apple为cnm然后另存为文件filecnm
+
+      * 首先要 vim file打开文件，然后:%s/apple/cnm/g, 然后:w filecnm， 然后撤销替换，然后退出。好几条命令。
+
+      * sed只需一条命令:    sed  's/apple/cnm/'  file > filecnm ,优雅，优雅，太优雅了。
+
+* {**<u>script-only-if-no-other-script</u>}部分详解**
+
+    > 上面说道，其实这部分很简单，只要是告诉sed编辑范围和编辑操作。英文称这个编辑范围为address或address-range，也比较准确，就是要编辑的位置和位置范围吗。为了简便起见，以下称这个区域为操作区。
+    >
+    > **然后sed在编辑范围内执行编辑操作**
+
+    * 编辑范围(跟vim查找替换那个范围差不多)
+
+      * | Address | Description                                                  |
+        | ------- | ------------------------------------------------------------ |
+        | NONE    | 省略表示所有行                                               |
+        | n       | 第n行                                                        |
+        | $       | 最后一行                                                     |
+        | n,m     | n~m行。(接下来的n,m都可以是具体数字，也可以是$代表最后一行)  |
+        | n~i     | n+ik行。1~3, 表示第1，4，7，10，13，16。。。行               |
+        | n,+k    | n~n+k行                                                      |
+        | /regex/ | 包含指定正则表达式pattern的那些行                            |
+        | addr!   | 除了这个地址范围之外的所有行.。addr可以是以上所有范围。n!表示除了第n行之外的所有行. n,m!表示除了n~m行以外的所有行。/regex/!除了匹配pattern之外的所有行。 |
+      
+    * 编辑操作
+
+      * | Command               | Description                                                  |
+        | --------------------- | ------------------------------------------------------------ |
+        | =                     | 输出行号                                                     |
+        | a                     | 行后追加文本                                                 |
+        | d                     | 删除                                                         |
+        | i                     | 行前插入文本                                                 |
+        | p                     | 打印行。sed默认情况下会打印所有行，然后对地址范围内行执行相应操作。如果是打印操作，'1,3p'本来想打印1~3行，实际上会先打印1~3行之后打印所有行。-n参数阻止sed默认打印所有行。sed -n '1,3p'就可以只打印1~3行了。 |
+        | q                     | 退出sed，不在处理更多的行。                                  |
+        | s/regexp/replacement/ | 跟vim中用法几乎一样。如果后面不加g，那么只替换匹配行中的第一个匹配，如果s/reg/replacement/g，每行中所有匹配都替换。 |
+        | y/set1/set2           | 类似tr，将set1指定的字符集转为set2指定的字符集。区别于tr的是sed要求set1,set2长度相同。 |
+      
+    * 上述只是命令行部分，如果想实现更复杂的操作，就要指定更复杂的编辑范围和编辑操作，可以写成一个脚本，然后 sed -f  script执行。
+
+* **Common Option**
+
+    * | Option | Description                             |
+        | ------ | --------------------------------------- |
+        | -f     | 操作区由脚本替代                        |
+        | -i     | 文本修改后不输出到stdou，直接写会原文件 |
+        |        |                                         |
+
+        
+
+* **Common Usage**
+
+    * sed -n '1,3p'  file
+
+        * 输出1~3行
+
+    * sed -n '/apple/p' file
+
+        * 输出匹配apple的所有行。
+
+    * ```shell
+        sed 's/\([0-9]\{2\}\)\/\([0-9]\{2\}\)\/\([0-9]\{4\}\)$/\3-\1-\2/' distros.txt
+        ```
+
+        * 把 MM/DD/YYYY形式的02/11/2008转为YYYY-MM-DD形式的2008-02-11
+        * 因为sed只支持BRE，所以(),{},都需要转义。/也需要转义，因为替换的格式s///斜线有特殊意义。
+        * 跟vim那个查找替换基本一样，$表示行末，()表示成组，然后后面可以用\\1,\\2,\\3来引用前面的三个组。
+        
+    * sed 's/apple/cnm/ ; s/nmsl/nbsl/' file
+
+        * 操作去可以同时执行多条命令，以分号隔开。
+
+###### aspell
+
+* **NAME**
+    * aspell - interactive spell checker
+* **SYNOPSIS**
+    * aspell [<u>options</u>] \<<u>command</u>>
+* **DESCRIPTION**
+    * 互动式拼写检查工具，很强大。
+* **Common Usage**
+    * aspell check file
+        * 检查file中的拼写错误。
 
 ###### wc(word count)
 
@@ -959,6 +1237,10 @@
   * echo [<u>SHORT-OPTION</u>]... [<u>STRING</u>]...
 * **DESCRIPTION**
   * echo的功能很简单，就是输出echo后面的所有内容(echo的参数除外)到stdout。
+
+###### dos2unix、unix2dos
+
+* 互转Windows和Unix风格的文件，就是转换\\n\\r和\\n.
 
 #### 2.3.2.3 创建文件链接
 
