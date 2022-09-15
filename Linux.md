@@ -739,11 +739,56 @@
     
     * [A-Z] \[a-z]可以组合为[A-Za-z],同理[:upper:],\[:lower:]可以组合为[[:upper:]\[:lower:]]
 
+# 9. 编译
 
+### 9.1 编译C程序流程
 
+* 图解
+  * ![](pics/Linux/compile.jpg)
+  * compile v. 编译  compiler n. 编译器
+  * assemble v. 组装，聚集，汇编  assembly n. 汇编  assembler n.汇编器
+* C标准头文件
+  * Linux下在/usr/include
+  * 这些头文件是哪儿来的，不是系统自带的，也不是所谓语言自带的，而是来自于编译器，当下载编译器时，编译器就会下载这些标准头文件，和对应的编译好的可重定位程序，到时后直接链接就行了。
+  * 例如Linux下就是下载GCC时下载的。
+  * 终于明白这些东西是哪儿来的了。。。以前一直以为是系统自带的或者更傻逼的是以为语言自带的。。
 
+### 9.2 编译GNU程序
 
+* 一般包含四个文档
 
+  > 构建(build)程序之前好好阅读INSTALL和README
+
+  * README
+  * INSTALL
+  * NEWS
+    * 更新信息，即有哪些新东西(News)
+  * COPYING
+
+* 一般流程
+
+  > ./configure
+  >
+  > make
+  >
+  > make install
+
+  * ./configure
+    * 执行configure脚本，该脚本有源码目录提供。
+    * 主要工作是分析程序构建环境(analyze the build environment).
+      * 因为一般程序都设计成可移植的，就是能在不同的类Unix系统之间构建，为了实现这一点，源码有时候也需要一点细微的变动，这就需要该脚本自动分析环境，然后微调。
+      * 还需要该脚本检查是否安装了必要的外部工具和组件。
+    * 分析完构建环境之后，会创建若干文件，其中最重要的是:
+      * Makefile
+        * makefile文件描述了构建最终程序的所有组件之间的关系和依赖性。
+        * configure默认产生的makefile名字就是Makefile
+  * make
+    * make接受makefile文件作为输入(默认名都是Makefile)，然后构建最终的可执行程序。
+    * 没有makefile文件，make无法执行。
+    * make很智能，修改特定部分的源代码，之后重新make，它只会更新那些依赖于这些修改了的源代码的组件，而不会全部重新构建一遍。
+
+  * make install
+    * 一般打包良好的源代码，都支持该命令，执行后最终安装程序。
 
 
 
