@@ -461,6 +461,26 @@
 
     * LaTeX
 
+#### 3.8 打印文件
+
+* 一些术语
+  * monospaced font
+    * 等宽字体
+  * WYSIWYG（What You See Is What You Get）
+    * 所见即所得
+  * typewriter
+    * 打字机
+  * typersetter
+    * 排字机
+* PDL(page-description language)
+  * 用来描述要打印的一页的内容
+  * 第一个主要的PDL是来自Adobe的PostScript
+* Linux管理和执行打印的系统
+  * CUPS(Common Unix Printing System)
+    * 提供打印驱动和打印任务管理
+  * Ghostscript
+    * 一个PostScription 解析器，作为RIP使用(Raster Image Processor 光栅图像处理器)
+
 # 4. 权限管理
 
 ### 4.1 用户，组
