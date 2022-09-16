@@ -147,6 +147,9 @@
   * 重定向stdout 和stderr
 * <
   * 重定向stdin
+* <<
+  * 重定向stdin
+
 
 #### 4.4 管道(pipeline)
 
