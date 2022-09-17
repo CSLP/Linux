@@ -95,6 +95,22 @@
 * shell函数
 
   > A shell function. These are miniature shell scripts incorporated into the environment. (它们是混合在环境变量中的微小的的shell脚本)
+  
+  * 完全可以把shell函数当做命令别名的完美替代，别名限制太多，shell function想怎么组合命令怎么组合，只要自己在shell配置文件.bashrc中定义函数，然后命令行就可以直接执行。
+  
+    * ```shell
+      hello ()
+      {
+      	echo "nmsl"
+      	ls -l
+      	cd ~
+      }
+      ```
+  
+    * 把上述shell function写入shell配置文件，然后就可以在命令行直接输入hello调用了。
+  
+    * type hello会显示: hello is a shell function from /home/linuxlp/.zshrc
+  
 
 
 
@@ -106,6 +122,8 @@
 
 * ![](pics/Linux/history.png)
   * 默认bash或者说默认shell中history是个内建命令，但是装了oh-my-zsh之后，oh-my-zsh用自己的版本替换了内建的history，此时运行的history命令就是典型的第三种命令，shell function
+  
+    
 
 
 
@@ -483,6 +501,10 @@
     * 提供打印驱动和打印任务管理
   * Ghostscript
     * 一个PostScription 解析器，作为RIP使用(Raster Image Processor 光栅图像处理器)
+
+#### 3.9 浏览器打开本地目录
+
+* 地址栏输入file://+路径即可
 
 # 4. 权限管理
 
