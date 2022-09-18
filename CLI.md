@@ -2941,12 +2941,15 @@
 ## 2.10 编译程序
 
 * 三部曲
-
-  > ./configure
-  >
-  > make
-  >
-  > sudo make install
+  * ./configure
+    * 探测环境，生成Makefile
+  
+  * make
+    * 根据Makefile调用相关编译器，预处理器，汇编器等生成各个可重定位二进制程序(.o文件)
+  
+  * make install
+    * 链接各种库和生成的.o文件，生成最终的可执行程序
+  
 
 ## 2.11 网络相关
 
@@ -3429,6 +3432,7 @@
 | TERM    | The name of your terminal type. Unix-like systems support many terminal protocols; this variable sets the protocol to be used with your terminal emulator. |
 | TZ      | Specifies your timezone. Most Unix-like systems maintain the computer's internal clock in Coordinated Universal Time (UTC) and then displays the local time by applying an offset specified by this variable. |
 | USER    | Your user name.                                              |
+| ？      | echo $?  输出上一个命令或脚本执行的返回结果(exit status)     |
 
 ### 4.2 查看环境
 
@@ -3620,7 +3624,7 @@
 
 > 以下这些所谓语法，都可以直接在命令行中执行
 
-##### 5.2.1 变量
+#### 5.2.1 变量
 
 * 命名
   * 字母、下划线、数字
@@ -3665,7 +3669,7 @@
   * 定义在任意函数之外的是全局变量，第一次出现构造，存在于整个程序的生命周期，作用域整个程序。
   * 定义在函数之内的是局部变量，函数执行时创建，执行结束销毁，作用域整个函数。
 
-##### 5.2.2 函数
+#### 5.2.2 函数
 
 > shell脚本语句无需分号
 
@@ -3707,6 +3711,162 @@
     * 我的愚蠢做法是一个一个实现，一个一个往里加。
     * 正确的做法就是一股脑定义所有函数，空的就行，也可以加一些说明。
     * 把这些函数当做已经实现了的函数一样使用，这样在早期阶段就可以完成测试程序的逻辑流程，之后就可以慢慢一个一个实现了，好办法。
+
+#### 5.2.3 流程控制
+
+###### 1. 分支流程(branch)
+
+* if 
+
+  ```shell
+  if commands; then          #1. 本质形式
+  fi
+  
+  if test expression; then   #2. 衍生形式
+  fi
+  
+  if [ expression ]; then    #3.常用形式
+  fi
+  
+  if [[ expression ]]; then   #4.现代常用形式1
+  fi
+  
+  if (( expression )); then    #5.现代常用形式2
+  fi
+  
+  if condition; then    #if else 写法
+  else
+  fi
+  
+  if condition; then	  #if elseif 写法
+  elif condition; then
+  else
+  fi
+  ```
+
+  * 判断条件
+
+    * shell的if的判断条件比较特殊，不是(expression)形式，而是命令形式(commands).
+    * 这个位置可以是任何命令，if根据命令的返回状态(exit status)执行流程，如果是0，表示false，非0表示true.
+    * 那么问题来了，如何将表达式作为条件？
+      * 老方法
+        * 引入test命令，test接受后面的表达式参数，如果表达式为真，test返回1，表达式为假，test返回0。这样就间接实现了条件是表达式而不是命令。
+        * 每次都写test太烦了，所以用[ expression ]形式代替 test expression形式，简洁。但是切记后者才是本质。shell if没有直接判断表达式的本事，本质是判断命令返回值。
+      * 新方法
+        * 引入[[ expression ]]机制，基本功能和[ expression ]一样，只是增加了对包含正则表达式的expression的支持。[ expression ]也就是test命令形式是POSIX标准的一部分，更通用，[[ expression ]]特定于不同的shell，可能会不通用，但是更好用。
+        * 引入(( expression ))机制，专门为算数表达式设计
+
+  * 注
+
+    * if condition ; 后面的分号很重要，不能省略，否则提示parse error
+    * [ expression ]、[[ expression ]] 、(( expression )) expression两边一定一定要有空格。否则提示parse error
+    * 建议用[[ expression ]]形式，简单强大好用
+
+  * expression类型
+
+    > 后面加[]，表示[ expression ]支持，加[[]] 表示[[ expression ]]支持，加(())表示(( expression ))支持
+
+    * file expression([],[[]])
+
+      * | Expression      | 为真情况                                                     |
+        | :-------------- | :----------------------------------------------------------- |
+        | file1 -ef file2 | equal file.具有相同inode节点。(说明file1,file2是硬链接，本质确实是同一个文件) |
+        | file1 -nt file2 | newer than。文件1比2新。                                     |
+        | file1 -ot file2 | older than 。文件1比2旧。                                    |
+        | -b file         | file exists and is a block special (device) file.            |
+        | -c file         | file exists and is a character special (device) file.        |
+        | -d file         | file exists and is a directory.                              |
+        | -e file         | file exists.                                                 |
+        | -f file         | file exists and is a regular file.                           |
+        | -g file         | file exists and is set-group-ID.                             |
+        | -G file         | file exists and is owned by the effective group ID.          |
+        | -k file         | file exists and has its “sticky bit” set.                    |
+        | -L file         | file exists and is a symbolic link.                          |
+        | -O file         | file exists and is owned by the effective user ID.           |
+        | -p file         | file exists and is a named pipe.(命名管道)                   |
+        | -r file         | file exists and is readable (has readable permission for the effective user). |
+        | -s file         | file exists and has a length greater than zero.(就是非空文件呗) |
+        | -S file         | file exists and is a network socket.                         |
+        | -t fd           | fd is a file descriptor directed to/from the terminal. This can be used to determine whether standard input/output/ error is being redirected. |
+        | -u file         | file exists and is setuid.                                   |
+        | -w file         | file exists and is writable (has write permission for the effective user). |
+        | -x file         | file exists and is executable (has execute/search permission for the effective user). |
+
+    * string expression([],[[]])
+
+      * | Expression         | 为真情况                                                     |
+        | :----------------- | :----------------------------------------------------------- |
+        | string             | string is not null.                                          |
+        | -n string          | The length of string is greater than zero.(非空字符串)       |
+        | -z string          | The length of string is zero.（空字符串）                    |
+        | string1 = string2  | string1 and string2 are equal.                               |
+        | string1 != string2 | string1 and string2 are not equal.                           |
+        | string1 > string2  | 按照字典顺序排序，string1大于2(即在2后面，例如bb > aa)。当然具体排序也可能不是字典序，自己看吧。 |
+        | string1 < string2  | 同上，小于。                                                 |
+
+        * \>,\<用于[ express ]要加引号，否则会被理解为重定向。用于[[ expression ]]时不用。
+        * 所有操作符(=,!=, >,<)两边都要有空格！！！
+
+    * Integer Expression（整型表达式）([],[[]])
+
+      * | Expression            | 为真情况                                       |
+        | :-------------------- | :--------------------------------------------- |
+        | integer1 -eq integer2 | integer1 is equal to integer2.                 |
+        | integer1 -ne integer2 | integer1 is not equal to integer2.             |
+        | integer1 -le integer2 | integer1 is less than or equal to integer2.    |
+        | integer1 -lt integer2 | integer1 is less than integer2.                |
+        | integer1 -ge integer2 | integer1 is greater than or equal to integer2. |
+        | integer1 -gt integer2 | integer1 is greater than integer2.             |
+
+        * integer除了常规的整型变量和整型字面值作为操作数外，还支持算术表达式($(())包起来)。
+          * [ $num -eq 2]    ,   [ $((2+2))  -eq  4]
+
+    * [[ expression ]]独有
+
+      * | Expression         | 为真                                                         |
+        | ------------------ | ------------------------------------------------------------ |
+        | string1 == string2 | string2可以为常规字符串，也可以包含通配符，匹配为真。        |
+        | string1 =~ string2 | string2可以是正则，不是完全匹配，只要string1包含string2所指定的pattern，就返回真 |
+
+    * (( expression)) 独有
+
+      * 支持对单个算术表达式结果的判断，为0假，非0真。
+
+        * 支持 ==， > , < ，使用整型变量时无需用$,使用算术表达式时，无需用$(())
+
+        * ```shell
+          INT=5
+          if (( INT == 0))
+          if (( INT > 0))
+          if (( INT < 0))
+          if (( (INT % 2) == 1 ))
+          ```
+
+  * 复合表达式
+
+    * 用与或非连接表达式
+
+    * | Operation | test([]) | [[ ]] and (( )) |
+      | :-------- | :------- | :-------------- |
+      | AND       | -a       | &&              |
+      | OR        | -o       | \|\|            |
+      | NOT       | !        | !               |
+
+      * [ expression ]使用 -a, -o ，!表示与或非，使用()来整理优先级，但是切记()要转义。
+      * [[]],(())更易用，使用通用的&&,||,!,使用()整理优先级，无需转义
+
+* || 和 &&
+
+  * command1 && command2
+    * 只有command1执行成功了，才会执行command2
+    * 类似短路判断。
+  * command1 || command2
+    * 只有command1执行失败了，才会执行command2
+    * 同短路判断
+  * 这两个命令类似C++中的 expression ? a : b
+    * 所以也可以这么用 [ abc == abd ] && echo cnm ,前面为真，则执行后面。([]本质是test命令)
+
+
 
 ​      
 
