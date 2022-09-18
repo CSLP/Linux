@@ -1424,6 +1424,10 @@
   * echo [<u>SHORT-OPTION</u>]... [<u>STRING</u>]...
 * **DESCRIPTION**
   * echo的功能很简单，就是输出echo后面的所有内容(echo的参数除外)到stdout。
+* **Common Option**
+  * -n
+    * 不显示文本行最后面的换行符。
+
 
 ###### dos2unix、unix2dos
 
@@ -2003,7 +2007,7 @@
 
 ### 2.5.2 命令帮助
 
-###### help(内建命令的帮助文档)
+###### help(bash内建命令的帮助文档)
 
 * **NAME**
 
@@ -2026,6 +2030,11 @@
       * 显示所有以t开头的内建命令的帮助
     * help
       * 显示所有内建命令
+
+###### run-help(zsh内建命令帮助文档)
+
+* run-help是一个zsh自带的shell function,借此搜索提供帮助。
+* 挺弱智的，不能单独查找命令，执行run-help command一股脑显示所有内建命令的帮助，还得自己手动找想要的部分。
 
 ###### --help(部分命令支持--help选项)
 
@@ -2398,7 +2407,7 @@
 * 重定向stdin
   * stdin由键盘重定向到文件。
   * eg
-    * cat < file  当然纯属脱裤子放屁了，很少用。
+    * cat < file  
 
 
 ###### <<   (here document)
@@ -2407,7 +2416,7 @@
 
 * 重定向stdin
 
-  * 嵌入一段文本代替键盘输入
+  * stdin有键盘重定向到一段文本
   * 这段文本就叫做：**here document**(here script)
 
 * <<-
@@ -2470,7 +2479,16 @@
       _EOF_
       ```
 
-      
+
+###### <<<(here string)
+
+* 重定向stdin
+  * stdin由键盘重定向到一个字符串
+* 形式
+  * command  <<<  string
+    * string可以是字面值字符串，也可以是一个字符串变量
+    * eg
+      * cat   <<< "nmsl"
 
 ###### \|    (管道(vertical bar竖线))
 
@@ -3566,7 +3584,7 @@
 
 # 5. shell脚本
 
-### 5.1 shell scripts
+## 5.1 shell scripts定义
 
 * shell, CLI, shell script
 
@@ -3620,11 +3638,11 @@
       * 冷知识，现在也没纯正的sh了，我的Ubuntu20.04的sh只是dash的符号链接罢了。
 
 
-### 5.2 shell脚本语言语法
+## 5.2 shell脚本语言语法
 
 > 以下这些所谓语法，都可以直接在命令行中执行
 
-#### 5.2.1 变量
+### 5.2.1 变量
 
 * 命名
   * 字母、下划线、数字
@@ -3669,7 +3687,7 @@
   * 定义在任意函数之外的是全局变量，第一次出现构造，存在于整个程序的生命周期，作用域整个程序。
   * 定义在函数之内的是局部变量，函数执行时创建，执行结束销毁，作用域整个函数。
 
-#### 5.2.2 函数
+### 5.2.2 函数
 
 > shell脚本语句无需分号
 
@@ -3712,159 +3730,252 @@
     * 正确的做法就是一股脑定义所有函数，空的就行，也可以加一些说明。
     * 把这些函数当做已经实现了的函数一样使用，这样在早期阶段就可以完成测试程序的逻辑流程，之后就可以慢慢一个一个实现了，好办法。
 
-#### 5.2.3 流程控制
+### 5.2.3 流程控制
 
-###### 1. 分支流程(branch)
+#### 5.2.3.1分支流程(branch)
 
-* if 
+##### 1. if  
 
-  ```shell
-  if commands; then          #1. 本质形式
-  fi
-  
-  if test expression; then   #2. 衍生形式
-  fi
-  
-  if [ expression ]; then    #3.常用形式
-  fi
-  
-  if [[ expression ]]; then   #4.现代常用形式1
-  fi
-  
-  if (( expression )); then    #5.现代常用形式2
-  fi
-  
-  if condition; then    #if else 写法
-  else
-  fi
-  
-  if condition; then	  #if elseif 写法
-  elif condition; then
-  else
-  fi
-  ```
+* 形式
 
-  * 判断条件
+  * ```shell
+    if commands; then          #1. 本质形式
+    fi
+    
+    if test expression; then   #2. 衍生形式
+    fi
+    
+    if [ expression ]; then    #3.常用形式
+    fi
+    
+    if [[ expression ]]; then   #4.现代常用形式1
+    fi
+    
+    if (( expression )); then    #5.现代常用形式2
+    fi
+    
+    if condition; then    #if else 写法
+    else
+    fi
+    
+    if condition; then	  #if elseif 写法
+    elif condition; then
+    else
+    fi
+    #### 推荐形式,这样比较容读，并且无需写分号
+    if condition
+    then
+    	body
+    fi
+    ```
 
-    * shell的if的判断条件比较特殊，不是(expression)形式，而是命令形式(commands).
-    * 这个位置可以是任何命令，if根据命令的返回状态(exit status)执行流程，如果是0，表示false，非0表示true.
-    * 那么问题来了，如何将表达式作为条件？
-      * 老方法
-        * 引入test命令，test接受后面的表达式参数，如果表达式为真，test返回1，表达式为假，test返回0。这样就间接实现了条件是表达式而不是命令。
-        * 每次都写test太烦了，所以用[ expression ]形式代替 test expression形式，简洁。但是切记后者才是本质。shell if没有直接判断表达式的本事，本质是判断命令返回值。
-      * 新方法
-        * 引入[[ expression ]]机制，基本功能和[ expression ]一样，只是增加了对包含正则表达式的expression的支持。[ expression ]也就是test命令形式是POSIX标准的一部分，更通用，[[ expression ]]特定于不同的shell，可能会不通用，但是更好用。
-        * 引入(( expression ))机制，专门为算数表达式设计
+* 判断条件
 
-  * 注
+  * shell的if的判断条件比较特殊，不是(expression)形式，而是命令形式(commands).
+  * 这个位置可以是任何命令，if根据命令的返回状态(exit status)执行流程，如果是0，表示false，非0表示true.
+  * 那么问题来了，如何将表达式作为条件？
+    * 老方法
+      * 引入test命令，test接受后面的表达式参数，如果表达式为真，test返回1，表达式为假，test返回0。这样就间接实现了条件是表达式而不是命令。
+      * 每次都写test太烦了，所以用[ expression ]形式代替 test expression形式，简洁。但是切记后者才是本质。shell if没有直接判断表达式的本事，本质是判断命令返回值。
+    * 新方法
+      * 引入[[ expression ]]机制，基本功能和[ expression ]一样，只是增加了对包含正则表达式的expression的支持。[ expression ]也就是test命令形式是POSIX标准的一部分，更通用，[[ expression ]]特定于不同的shell，可能会不通用，但是更好用。
+      * 引入(( expression ))机制，专门为算数表达式设计
 
-    * if condition ; 后面的分号很重要，不能省略，否则提示parse error
-    * [ expression ]、[[ expression ]] 、(( expression )) expression两边一定一定要有空格。否则提示parse error
-    * 建议用[[ expression ]]形式，简单强大好用
+* 注
 
-  * expression类型
+  * if condition ; then 如果condition是commands，那么分号必须有，如果是[],[[]]或(())，可以没分号。
+    * **太操蛋了，建议另起一行写then，这样都无需分号，而且可读，不用记这些有的没的。**
+  * [ expression ]、[[ expression ]] 、(( expression )) expression两边一定一定要有空格。否则提示parse error
+  * 建议用[[ expression ]]形式，简单强大好用
 
-    > 后面加[]，表示[ expression ]支持，加[[]] 表示[[ expression ]]支持，加(())表示(( expression ))支持
+* 简单expression
 
-    * file expression([],[[]])
+  > 后面加[]，表示[ expression ]支持，加[[]] 表示[[ expression ]]支持，加(())表示(( expression ))支持
 
-      * | Expression      | 为真情况                                                     |
-        | :-------------- | :----------------------------------------------------------- |
-        | file1 -ef file2 | equal file.具有相同inode节点。(说明file1,file2是硬链接，本质确实是同一个文件) |
-        | file1 -nt file2 | newer than。文件1比2新。                                     |
-        | file1 -ot file2 | older than 。文件1比2旧。                                    |
-        | -b file         | file exists and is a block special (device) file.            |
-        | -c file         | file exists and is a character special (device) file.        |
-        | -d file         | file exists and is a directory.                              |
-        | -e file         | file exists.                                                 |
-        | -f file         | file exists and is a regular file.                           |
-        | -g file         | file exists and is set-group-ID.                             |
-        | -G file         | file exists and is owned by the effective group ID.          |
-        | -k file         | file exists and has its “sticky bit” set.                    |
-        | -L file         | file exists and is a symbolic link.                          |
-        | -O file         | file exists and is owned by the effective user ID.           |
-        | -p file         | file exists and is a named pipe.(命名管道)                   |
-        | -r file         | file exists and is readable (has readable permission for the effective user). |
-        | -s file         | file exists and has a length greater than zero.(就是非空文件呗) |
-        | -S file         | file exists and is a network socket.                         |
-        | -t fd           | fd is a file descriptor directed to/from the terminal. This can be used to determine whether standard input/output/ error is being redirected. |
-        | -u file         | file exists and is setuid.                                   |
-        | -w file         | file exists and is writable (has write permission for the effective user). |
-        | -x file         | file exists and is executable (has execute/search permission for the effective user). |
+  * file expression([],[[]])
 
-    * string expression([],[[]])
+    * | Expression      | 为真情况                                                     |
+      | :-------------- | :----------------------------------------------------------- |
+      | file1 -ef file2 | equal file.具有相同inode节点。(说明file1,file2是硬链接，本质确实是同一个文件) |
+      | file1 -nt file2 | newer than。文件1比2新。                                     |
+      | file1 -ot file2 | older than 。文件1比2旧。                                    |
+      | -b file         | file exists and is a block special (device) file.            |
+      | -c file         | file exists and is a character special (device) file.        |
+      | -d file         | file exists and is a directory.                              |
+      | -e file         | file exists.                                                 |
+      | -f file         | file exists and is a regular file.                           |
+      | -g file         | file exists and is set-group-ID.                             |
+      | -G file         | file exists and is owned by the effective group ID.          |
+      | -k file         | file exists and has its “sticky bit” set.                    |
+      | -L file         | file exists and is a symbolic link.                          |
+      | -O file         | file exists and is owned by the effective user ID.           |
+      | -p file         | file exists and is a named pipe.(命名管道)                   |
+      | -r file         | file exists and is readable (has readable permission for the effective user). |
+      | -s file         | file exists and has a length greater than zero.(就是非空文件呗) |
+      | -S file         | file exists and is a network socket.                         |
+      | -t fd           | fd is a file descriptor directed to/from the terminal. This can be used to determine whether standard input/output/ error is being redirected. |
+      | -u file         | file exists and is setuid.                                   |
+      | -w file         | file exists and is writable (has write permission for the effective user). |
+      | -x file         | file exists and is executable (has execute/search permission for the effective user). |
 
-      * | Expression         | 为真情况                                                     |
-        | :----------------- | :----------------------------------------------------------- |
-        | string             | string is not null.                                          |
-        | -n string          | The length of string is greater than zero.(非空字符串)       |
-        | -z string          | The length of string is zero.（空字符串）                    |
-        | string1 = string2  | string1 and string2 are equal.                               |
-        | string1 != string2 | string1 and string2 are not equal.                           |
-        | string1 > string2  | 按照字典顺序排序，string1大于2(即在2后面，例如bb > aa)。当然具体排序也可能不是字典序，自己看吧。 |
-        | string1 < string2  | 同上，小于。                                                 |
+  * string expression([],[[]])
 
-        * \>,\<用于[ express ]要加引号，否则会被理解为重定向。用于[[ expression ]]时不用。
-        * 所有操作符(=,!=, >,<)两边都要有空格！！！
+    * | Expression         | 为真情况                                                     |
+      | :----------------- | :----------------------------------------------------------- |
+      | string             | string is not null.                                          |
+      | -n string          | The length of string is greater than zero.(非空字符串)       |
+      | -z string          | The length of string is zero.（空字符串）                    |
+      | string1 = string2  | string1 and string2 are equal.                               |
+      | string1 != string2 | string1 and string2 are not equal.                           |
+      | string1 > string2  | 按照字典顺序排序，string1大于2(即在2后面，例如bb > aa)。当然具体排序也可能不是字典序，自己看吧。 |
+      | string1 < string2  | 同上，小于。                                                 |
 
-    * Integer Expression（整型表达式）([],[[]])
+      * \>,\<用于[ express ]要加引号，否则会被理解为重定向。用于[[ expression ]]时不用。
+      * 所有操作符(=,!=, >,<)两边都要有空格！！！
 
-      * | Expression            | 为真情况                                       |
-        | :-------------------- | :--------------------------------------------- |
-        | integer1 -eq integer2 | integer1 is equal to integer2.                 |
-        | integer1 -ne integer2 | integer1 is not equal to integer2.             |
-        | integer1 -le integer2 | integer1 is less than or equal to integer2.    |
-        | integer1 -lt integer2 | integer1 is less than integer2.                |
-        | integer1 -ge integer2 | integer1 is greater than or equal to integer2. |
-        | integer1 -gt integer2 | integer1 is greater than integer2.             |
+  * Integer Expression（整型表达式）([],[[]])
 
-        * integer除了常规的整型变量和整型字面值作为操作数外，还支持算术表达式($(())包起来)。
-          * [ $num -eq 2]    ,   [ $((2+2))  -eq  4]
+    * | Expression            | 为真情况                                       |
+      | :-------------------- | :--------------------------------------------- |
+      | integer1 -eq integer2 | integer1 is equal to integer2.                 |
+      | integer1 -ne integer2 | integer1 is not equal to integer2.             |
+      | integer1 -le integer2 | integer1 is less than or equal to integer2.    |
+      | integer1 -lt integer2 | integer1 is less than integer2.                |
+      | integer1 -ge integer2 | integer1 is greater than or equal to integer2. |
+      | integer1 -gt integer2 | integer1 is greater than integer2.             |
 
-    * [[ expression ]]独有
+      * integer除了常规的整型变量和整型字面值作为操作数外，还支持算术表达式($(())包起来)。
+        * [ $num -eq 2]    ,   [ $((2+2))  -eq  4]
 
-      * | Expression         | 为真                                                         |
-        | ------------------ | ------------------------------------------------------------ |
-        | string1 == string2 | string2可以为常规字符串，也可以包含通配符，匹配为真。        |
-        | string1 =~ string2 | string2可以是正则，不是完全匹配，只要string1包含string2所指定的pattern，就返回真 |
+  * [[ expression ]]独有
 
-    * (( expression)) 独有
+    * | Expression         | 为真                                                         |
+      | ------------------ | ------------------------------------------------------------ |
+      | string1 == string2 | string2可以为常规字符串，也可以包含通配符，匹配为真。        |
+      | string1 =~ string2 | string2可以是正则，不是完全匹配，只要string1包含string2所指定的pattern，就返回真 |
 
-      * 支持对单个算术表达式结果的判断，为0假，非0真。
+  * (( expression)) 独有
 
-        * 支持 ==， > , < ，使用整型变量时无需用$,使用算术表达式时，无需用$(())
+    * 支持对单个算术表达式结果的判断，为0假，非0真。
 
-        * ```shell
-          INT=5
-          if (( INT == 0))
-          if (( INT > 0))
-          if (( INT < 0))
-          if (( (INT % 2) == 1 ))
-          ```
+      * 支持 ==， > , < ，使用整型变量时无需用$,使用算术表达式时，无需用$(())
 
-  * 复合表达式
+      * ```shell
+        INT=5
+        if (( INT == 0))
+        if (( INT > 0))
+        if (( INT < 0))
+        if (( (INT % 2) == 1 ))
+        ```
 
-    * 用与或非连接表达式
+* 复合表达式
 
-    * | Operation | test([]) | [[ ]] and (( )) |
-      | :-------- | :------- | :-------------- |
-      | AND       | -a       | &&              |
-      | OR        | -o       | \|\|            |
-      | NOT       | !        | !               |
+  * 用与或非连接表达式
 
-      * [ expression ]使用 -a, -o ，!表示与或非，使用()来整理优先级，但是切记()要转义。
-      * [[]],(())更易用，使用通用的&&,||,!,使用()整理优先级，无需转义
+  * | Operation | test([]) | [[ ]] and (( )) |
+    | :-------- | :------- | :-------------- |
+    | AND       | -a       | &&              |
+    | OR        | -o       | \|\|            |
+    | NOT       | !        | !               |
 
-* || 和 &&
+    * [ expression ]使用 -a, -o ，!表示与或非，使用()来整理优先级，但是切记()要转义。
+    * [[]],(())更易用，使用通用的&&,||,!,使用()整理优先级，无需转义
 
-  * command1 && command2
-    * 只有command1执行成功了，才会执行command2
-    * 类似短路判断。
-  * command1 || command2
-    * 只有command1执行失败了，才会执行command2
-    * 同短路判断
-  * 这两个命令类似C++中的 expression ? a : b
-    * 所以也可以这么用 [ abc == abd ] && echo cnm ,前面为真，则执行后面。([]本质是test命令)
+##### 2. || 和 &&
+
+* command1 && command2
+  * 只有command1执行成功了，才会执行command2
+  * 类似短路判断。
+  * 
+* command1 || command2
+  * 只有command1执行失败了，才会执行command2
+  * 同短路判断
+* 这两个命令类似C++中的 expression ? a : b
+  * 所以也可以这么用 [ abc == abd ] && echo cnm ,前面为真，则执行后面。([]本质是test命令)
+
+#### 5.2.3.2 IO
+
+##### 1. input
+
+######  read(读键盘输入)
+
+* **NAME**
+
+* **SYNOPSIS**
+
+  * read [<u>OPTIONS</u>] [<u>VAR</u>...]
+
+* **DESCRIPTION**
+
+  > **Read one line** and break it into fields using the characters in $**IFS** as separators,  except  as noted below.The first field is assigned to the first <u>var</u>,the second field to the second <u>var</u>, etc., with leftover  fields  assigned  to the  last  <u>var</u>.   If <u>var</u> is omitted then **REPLY** is used for scalars and **reply** for arrays.
+  >
+  > scalars 标量
+
+  * 类似C++中的cin, 接受键盘输入然后赋值给后面定义的的VAR中。
+  * 默认以空白分隔输入，输入enter表示输入结束。
+    * 空白分隔是由shell的单词分隔机制(word-splitting)决定的。默认分隔符是空白(空格，TAB，\\n)
+    * 正如上面引用所说，配置分隔符由shell的一个变量IFS(Internal Field Separator)指定,我们可以修改这个量来指定。
+    * eg
+      * IFS=":"  read a b c <<< "fuck:fuck:fuck"
+        * 成功读取并分离
+        * 这种用法下，对IFS的修改仅作用于紧邻它之后的命令。
+  * 特殊点
+    * 形参个数少于实参，多余的实参全部赋值给最后一个形参。
+    * 形参数==实参数，一一对应赋值
+    * 形参数\>实参数, 多余的形参赋空值。
+    * 如果一个形参不写，那么把所有实参默认赋值给环境变量REPLY
+  * read不能用于管道
+    * read读取stdin的一行
+      * 可以读取键盘作为stdin
+      * 可以读取> 文件重定向作为stdin, 但是只读取文件的第一行。
+      * 可以读取>> here document作为stdin,同样只读取第一行。
+      * 可以读取>>> here string作为stdin,同样只读取string中的第一行(如果有多行的话，当然一般都是一行)
+    * read不可用于管道。
+      * 不能用于管道倒不是因为无法接受上游来的stdin。原因在于管道的实现机制。
+      * 管道的实现机制利用子shell
+        *  command1 | command 2 | command3
+          * 创建一个子shell执行command1，执行完毕，销毁子shell。
+          * shell保存command1的输出，然后再创建子shell将输出传给command2并执行.
+          * 同理执行完毕，销毁子shell，创建子shell执行command3并传递command2的输出给command3。
+          * 执行完毕，销毁子shell，将command3输出输出到屏幕。
+        * 问题就出在子shell这里
+          * echo "1 2 3"  | read n1 n2
+          * echo执行完毕后，shell将输出传给read，然后开子shell执行read，read执行完毕，创建了n1 n2两个变量，但是这两个变量属于执行read的子shell，销毁子shell时，shell只会保存命令产生的标准输出，而不会保存命令在子shell中创建的变量，所以执行完read后，n1 n2同子shell一样销毁了
+          * 所以read不能用于管道。
+
+* **Common Option**
+
+  * | Option          | Description                                                  |
+    | :-------------- | :----------------------------------------------------------- |
+    | -A              | The  first  var is taken as the name of an array and all words are assigned to it. |
+    | -d <u>delim</u> | 用字符串 delim 中的第一个字符指示输入结束，而不是一个换行符。 |
+    | -e              | 使用 Readline 来处理输入。这使得与命令行相同的方式编辑输入。 |
+    | -n num          | 读取 num 个输入字符，而不是整行                              |
+    | -r              | Raw mode. 不把反斜杠字符解释为转义字符。                     |
+    | -s              | Silent mode.不会在屏幕上显示输入的字符。当输入密码和其它确认信息的时候，这会很有帮助。 |
+    | -t seconds      | Timeout. Terminate input after seconds. read returns a non-zero exit status if an input times out. |
+    | -u n            | Input is read from file descriptor n.                        |
+    | ?string         | read第一个var为问号开头，那么read把string当做提示信息输出，并不会当做变量。例如read "?please input a number:"   n ==  cout<<"please input a number:"; cin>>n; |
+
+###### 验证输入(vaildate input
+
+> vaild [ˈvælɪd] a.有效的,合理的
+>
+> vaildate [ˈvælɪdeɪt] v. 验证，证实
+
+* 一个合格的程序，一定要验证输入，确保针对合法，非法，预期内，预期之外的输入都能很好的处理
+
+菜单驱动(menu-drive)
+
+* 就是先显示一个菜单，然后让你输入一个数选择哪项操作，输入数后，执行数字代表的操作。
+
+##### 2. output
+
+###### echo, printf
+
+[echo](#echo)
+
+[printf](#printf(print formatted))
 
 
 
