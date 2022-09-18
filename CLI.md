@@ -2602,7 +2602,7 @@
 
 ## 2.8 进程相关(process)
 
-#### 2.8.1 监视进程(display or monitor processes)
+### 2.8.1 监视进程(display or monitor processes)
 
 ###### ps(process status)
 
@@ -3591,9 +3591,7 @@
   * shell脚本
     * 包含一系列命令的一个文件。shell读取并执行脚本中的命令就好似直接输入到命令行一样。
       * 这一点很重要，凡是能在脚本中执行的，就能直接在命令行输入执行。所以所谓shell脚本语言中的变量，函数都能在命令行直接输入执行。
-      * 有一点微小的区别就是命令行输入enter就视为命令结束，想换行需要转义\\+enter。脚本中显然不是这样:stuck_out_tongue_closed_eyes:
     * shell脚本语言编写的程序
-    
   * shell
     * 一个命令行界面(CLI)——执行命令
     * 一个脚本语言解释器(scripting language interpreter)——解释执行脚本文件
@@ -3730,9 +3728,22 @@
     * 正确的做法就是一股脑定义所有函数，空的就行，也可以加一些说明。
     * 把这些函数当做已经实现了的函数一样使用，这样在早期阶段就可以完成测试程序的逻辑流程，之后就可以慢慢一个一个实现了，好办法。
 
-### 5.2.3 流程控制
+### 5.2.3 流程控制(flow control)
 
-#### 5.2.3.1分支流程(branch)
+#### 5.2.3.0 顺序(sequences)
+
+##### 1. 顺序执行
+
+* 懂得都懂，不会真有人不懂吧？
+
+##### 2.睡眠(sleep)
+
+###### sleep
+
+* sleep n
+  * 脚本执行到这里，睡眠n 秒
+
+#### 5.2.3.1分支(branch)
 
 ##### 1. if  
 
@@ -3772,10 +3783,13 @@
 * 判断条件
 
   * shell的if的判断条件比较特殊，不是(expression)形式，而是命令形式(commands).
-  * 这个位置可以是任何命令，if根据命令的返回状态(exit status)执行流程，如果是0，表示false，非0表示true.
+  * 这个位置可以是任何命令，if根据命令的返回状态(exit status)执行流程，如果是0说明命令执行成功，表示true，非0表示表示命令执行失败，表示false.
+  * true和false命令
+    * shell内建命令，唯一的作用就是true执行后exit status为0，false为1.
+    * 所以可   if  true   来表示条件永远为真。
   * 那么问题来了，如何将表达式作为条件？
     * 老方法
-      * 引入test命令，test接受后面的表达式参数，如果表达式为真，test返回1，表达式为假，test返回0。这样就间接实现了条件是表达式而不是命令。
+      * 引入test命令，test接受后面的表达式参数，如果表达式为真，test返回0，表达式为假，test返回1。这样就间接实现了条件是表达式而不是命令。
       * 每次都写test太烦了，所以用[ expression ]形式代替 test expression形式，简洁。但是切记后者才是本质。shell if没有直接判断表达式的本事，本质是判断命令返回值。
     * 新方法
       * 引入[[ expression ]]机制，基本功能和[ expression ]一样，只是增加了对包含正则表达式的expression的支持。[ expression ]也就是test命令形式是POSIX标准的一部分，更通用，[[ expression ]]特定于不同的shell，可能会不通用，但是更好用。
@@ -3893,9 +3907,94 @@
 * 这两个命令类似C++中的 expression ? a : b
   * 所以也可以这么用 [ abc == abd ] && echo cnm ,前面为真，则执行后面。([]本质是test命令)
 
-#### 5.2.3.2 IO
+#### 5.2.3.2 循环(looping)
 
-##### 1. input
+##### 1. while
+
+* 形式
+
+  * ```shell
+    while condition; do
+    	body
+    done
+    
+    while condition	#建议用这种形式
+    do
+    	body
+    done
+    ```
+
+* condition
+
+  * 跟if一样，condition本质也是命令，所以同样几种形式
+
+    * commands
+    * test expression  /  [ expression ]
+    * [[ expression ]]
+    * (( expression ))
+
+  * 条件部分就不赘述了，参考if部分条件解释。
+
+* 使用循环读取文件
+
+  * ```shell
+    # while-read: read lines from a file
+    while read name phone address
+    do
+        printf "%s   %d  %s\n" \
+            $name \
+            $phone \
+            $address
+    done < peoples.txt
+    ```
+  
+    * read一次读取一行，重定向peoples.txt,利用循环，一次读取一行。
+  
+  * ```shell
+    cat peoples.txt | while read name phone address
+    do
+        printf "%s   %d  %s\n" \
+            $name \
+            $phone \
+            $address
+    done 
+    ```
+  
+    * 功能同上
+    * ？？？ 不是read不能用于管道吗，是，但是这里可以，因为整个while循环是一个整体，所以都运行在子shell内，所以循环内的$name的参数能正确访问。
+  
+
+##### 2. until
+
+* 形式
+
+  * ```shell
+    until condition; do
+    	body
+    done
+    
+    until condition
+    do
+    	body
+    done
+    ```
+
+* condition
+
+  * shell的until真是操蛋，跟C++不太一样。
+  * while当condition为真时执行，until当condition为假时执行
+    * 所以  while condition ; do;done  == until !condition ;do; done
+
+##### 3. continue, break
+
+* continue
+  * 跳过本次循环，直接执行下一次
+* break
+  * 跳出循环
+
+### 5.2.4 IO
+
+#### 1. input
 
 ######  read(读键盘输入)
 
@@ -3969,13 +4068,58 @@
 
 * 就是先显示一个菜单，然后让你输入一个数选择哪项操作，输入数后，执行数字代表的操作。
 
-##### 2. output
+#### 2. output
 
 ###### echo, printf
 
 [echo](#echo)
 
 [printf](#printf(print formatted))
+
+## 5.3 Debug
+
+> track down and eradicate problems 追踪和消灭问题
+>
+> eradicate  [ɪˈrædɪkeɪt]  vt.根除，消灭
+
+### 5.3.1常见错误
+
+#### 1. 语法错误(syntactic error)
+
+* 拼错单词了，少了分号了，少了结构了等等
+* 报错挺抽象的，报哪行出错并不一定还是这行出错了。。
+
+#### 2. 逻辑错误(logical errors)
+
+* 常见错误类型
+  * 错误的条件表达式
+    * 导致if，while出错
+  * 计数器错误的初始值
+    * 导致while多执行，少执行。
+  * 意外
+    * 遇到意外的数据，非法的数据等等
+
+### 5.3.2 Debug通用流程
+
+> 详情见gitRepo中的Debug仓
+
+* 定位区域
+
+* 追踪逻辑流
+
+  * 形式
+
+    * ```shell
+      set -x
+      要追踪的代码
+      set +x
+      ```
+
+      * set + x可以省略，省略后表示从 set -x到文件末尾的代码都被追踪
+
+  * 输出
+
+    * 前面带 + 号的表示是追踪信息以区分正常输出信息
 
 
 
