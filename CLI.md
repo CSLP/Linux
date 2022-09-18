@@ -3900,12 +3900,84 @@
 * command1 && command2
   * 只有command1执行成功了，才会执行command2
   * 类似短路判断。
-  * 
 * command1 || command2
   * 只有command1执行失败了，才会执行command2
   * 同短路判断
 * 这两个命令类似C++中的 expression ? a : b
   * 所以也可以这么用 [ abc == abd ] && echo cnm ,前面为真，则执行后面。([]本质是test命令)
+
+##### 3. case
+
+* 形式
+
+  * ```shell
+    case word in
+    	pattern) 代码;;
+    	pattern) 代码;;
+    	pattern) 代码;;
+    esac	
+    ```
+
+    * 只能说很独特每个case以patter)开头，;;结尾表示一个case。
+
+* pattern
+
+  * 基本就是字符串匹配加支持通配符。
+
+    * | Pattern      | Description                              |
+      | :----------- | :--------------------------------------- |
+      | a)           | word等于a那么匹配                        |
+      | [[:alpha:]]) | word如果是一个字母字符那么匹配           |
+      | ???)         | word如果是3个字符长的任意字符串那么匹配  |
+      | *.txt)       | word是以.text结尾的字符串那么匹配。      |
+      | *)           | 匹配任意word，相当于实现了默认匹配功能。 |
+
+* 相对于C++的case的特殊之处
+
+  * 只执行匹配的case，不会执行该case下面的case。这点C++需要用break来实现。
+
+  * 因为支持通配符，所以可能有多个匹配结果，例如cnm同时匹配???)和*nm)。
+
+    * 遇到多个匹配的情况，老版本bash报错
+
+    * 现代bash只执行第一个匹配的case，如果想执行所有匹配，把case结尾的;;改为;;&即可。
+
+      * ```shell
+        read -n 1 -p "Type a character > "
+        echo
+        case $REPLY in
+            [[:upper:]])    echo "'$REPLY' is upper case." ;;
+            [[:lower:]])    echo "'$REPLY' is lower case." ;;
+            [[:alpha:]])    echo "'$REPLY' is alphabetic." ;;
+            [[:digit:]])    echo "'$REPLY' is a digit." ;;
+            [[:graph:]])    echo "'$REPLY' is a visible character." ;;
+            [[:punct:]])    echo "'$REPLY' is a punctuation symbol." ;;
+            [[:space:]])    echo "'$REPLY' is a whitespace character." ;;
+            [[:xdigit:]])   echo "'$REPLY' is a hexadecimal digit." ;;
+        esac
+        #如果输入a，那么同时匹配小写，字母，16进制，现代bash只执行第一个匹配，所以输出
+        Type a character > a
+        'a' is lower case.
+        #如果想执行所有匹配，那么改为
+        case $REPLY in
+            [[:upper:]])    echo "'$REPLY' is upper case." ;;&
+            [[:lower:]])    echo "'$REPLY' is lower case." ;;&
+            [[:alpha:]])    echo "'$REPLY' is alphabetic." ;;&
+            [[:digit:]])    echo "'$REPLY' is a digit." ;;&
+            [[:graph:]])    echo "'$REPLY' is a visible character." ;;&
+            [[:punct:]])    echo "'$REPLY' is a punctuation symbol." ;;&
+            [[:space:]])    echo "'$REPLY' is a whitespace character." ;;&
+            [[:xdigit:]])   echo "'$REPLY' is a hexadecimal digit." ;;&
+        esac
+        #输入a后显示
+        Type a character > a
+        'a' is lower case.
+        'a' is alphabetic.
+        'a' is a visible character.
+        'a' is a hexadecimal digit.
+        ```
+
+        
 
 #### 5.2.3.2 循环(looping)
 
@@ -4054,7 +4126,8 @@
     | -s              | Silent mode.不会在屏幕上显示输入的字符。当输入密码和其它确认信息的时候，这会很有帮助。 |
     | -t seconds      | Timeout. Terminate input after seconds. read returns a non-zero exit status if an input times out. |
     | -u n            | Input is read from file descriptor n.                        |
-    | ?string         | read第一个var为问号开头，那么read把string当做提示信息输出，并不会当做变量。例如read "?please input a number:"   n ==  cout<<"please input a number:"; cin>>n; |
+    | ?string         | read第一个var为问号开头，那么read把string当做提示信息输出，并不会当做变量。例如read "?please input a number:"   n ==  cout<<"please input a number:"; cin>>n;**仅适用于命令行输入情况下。** |
+    | -p string       | 输出提示信息，string为提示信息。**仅适用于脚本使用情况下。** |
 
 ###### 验证输入(vaildate input
 
