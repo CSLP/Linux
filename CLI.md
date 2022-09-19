@@ -3955,7 +3955,164 @@
       ABc
       ```
 
+#### 5.2.1.4 字符串
 
+#### 5.2.1.3 数组
+
+> array [əˈreɪ] n. 数组，阵列；大堆，大群
+>
+> 通过索引或下标访问元素(index, subscript, element)
+
+##### 1. 普通数组
+
+> 下标是整数
+
+###### 1.1 构建或赋值
+
+> shell变量没C++那么麻烦，又是构建，又是初始化，又是赋值。。
+>
+> shell变量就一个原则，想用就用，想用就创建一个。
+
+* ```shell
+  declare -a  var  #创建一个数组
+  var[index]=value #创建或赋值，下标从0开始，index可以为整数字面值、整数变量、整数表达式
+  var=(value1 value2 value3 value4)  #依次赋值var[0],var[1]...
+  var=([0]=value1 [1]=value2 [3]=value4) #显式指定
+  ```
+
+###### 1.2. 数组shell展开
+
+* 简单使用
+
+  * 作为左值
+    * var[i]=value
+
+  * 作为右值
+    * ${var[i]}
+      * 加大括号表示var[i]整体是一个变量，否则会被shell统配符展开，[]当成通配符那个方括号
+
+* 复杂操作
+
+  > 类似C++提供的操作数组的一些标准库函数，只不过是借助shell展开机制实现的
+
+  * 数组作为for循环的集合使用
+
+    * ${var[@]}
+
+      * ```shell
+        animals=("a dog" "a cat" "a fish")
+        [me@linuxbox ~]$ echo ${animals[@]}
+        a dog a cat a fish
+        [me@linuxbox ~]$ for i in ${animals[@]}; do echo $i; done
+        a
+        dog
+        a
+        cat
+        a
+        fish
+        [me@linuxbox ~]$ for i in "${animals[@]}"; do echo $i; done
+        a dog
+        a cat
+        a fish
+        ```
+
+        * 显然通俗意义上我们更应该使用  "${var[@]}"形式
+
+        * 为啥加引号，不知道为啥，bash设计的不加引号不是我们想要的那个结果，那个结果也不知道有啥用，我用的zsh不加引号正常使用就能分离出来每个元素一行。
+
+          
+
+  * 确定数组元素个数
+
+    * ${#var[@]}
+
+      * ```shell
+        [me@linuxbox ~]$ a[100]=foo
+        [me@linuxbox ~]$ echo ${#a[@]} # number of array elements
+        1
+        [me@linuxbox ~]$ echo ${#a[100]} # length of element 100
+        3
+        ```
+
+        * 同样这个是bash的情况,只创建了a[100],那么长度为1，zsh情况则是长度为100，可能默认创建0~99号元素了吧。
+        * 不过一般也不这么用，都是从0开始赋值的，这种情况下应该都是实际的长度。
+        * 这个展开也可以显示字符串长度，所以上例显示了a[100]的长度
+
+  * 确定已经使用了的下标
+
+    > shell数组不要求连续存在，中间可以存在空隙(gap)
+    >
+    > 我猜测shell的数组根本不是连续的一块内存挨着存放的。所以随便空隙。
+
+    * ${!var[@]}
+
+      * 显示使用了那些下标
+
+      * ```shell 
+        linuxlp@LPPC:~/GitRepo/Linux$ foo=([2]=a [4]=b [6]=c)
+        linuxlp@LPPC:~/GitRepo/Linux$ echo ${!foo[@]}
+        2 4 6
+        ```
+
+  * 末尾追加元素
+
+    * var+=(value value value)
+
+      * ```shell
+        linuxlp@LPPC:~/GitRepo/Linux$ nmsl=(a b c)
+        linuxlp@LPPC:~/GitRepo/Linux$ echo ${nmsl[@]}
+        a b c
+        linuxlp@LPPC:~/GitRepo/Linux$ nmsl+=(e f g)
+        linuxlp@LPPC:~/GitRepo/Linux$ echo ${nmsl[@]}
+        a b c e f g
+        ```
+
+  * 排序数组
+
+    > 没有直接方法排序原数组，但是可以通过脚本操作产生一个排序好的副本
+
+    * ```shell
+      linuxlp@LPPC:~/GitRepo/Linux$ lppc=(k f e a x i k)
+      linuxlp@LPPC:~/GitRepo/Linux$ echo ${lppc[@]}
+      k f e a x i k
+      linuxlp@LPPC:~/GitRepo/Linux$ lppc_sorted=($(for i in "${lppc[@]}";do echo $i;done | sort))  
+      linuxlp@LPPC:~/GitRepo/Linux$ echo ${lppc_sorted[@]}
+      a e f i k k x
+      #利用命令展开机制，借助管道命令的输出重新赋值一个新数组
+      #利用这种办法，可以实现许多操作，基于原数组生成不同的子数组
+      ```
+
+  * 删除数组或元素
+
+    * unset var
+    * unset 'var[2]'   防止展开，加单引号将完整参数传递个unset命令
+
+  * 省略下标
+
+    * var=10   <==>  var[0]=10
+
+##### 2. 关联数组
+
+> 下标是字符串
+
+###### 2.1 构建或赋值
+
+* ```shell
+  declare -A colors
+  colors["red"]="#ff0000"
+  colors["green"]="#00ff00"
+  colors["blue"]="#0000ff"
+  ```
+
+  * 不同于普通数组，关联数组必须显示declare -A 创建
+
+###### 2.2 shell展开
+
+* 简单使用
+  * 左值
+    * colors["red"]
+  * 右值
+    * ${colors["red"]}
 
 ### 5.2.2 函数
 
@@ -4095,6 +4252,16 @@
       | ！                |                                                              |
       | expr1?expr2:expr3 | Comparison (ternary) operator. If expression expr1 evaluates to be non-zero (arithmetic true) then expr2, else expr3.（ternary operator 三元运算符） |
 
+##### 3. 整数表达式扩展
+
+* 整数运算
+  * shell语言只支持整数运算，如果想进行浮点数计算，需要依赖外部程序
+* 数值计算
+  * bc
+    * bc是一个大多数发行版都带的强大的计算程序，不仅可以实现普通计算器的功能，还可以接受脚本语言文件来实现强大的计算功能，我理解bc就类似弱版的matlab吧。
+    * 它有自己的语言，利用bc语言编写脚本，然后让bc进行复杂计算。
+    * bc语言类似C语言，需要用的时候在说吧。记住又这么一个东西可以实现浮点计算就行了。。
+
 #### 5.2.3.2 字符串表达式
 
 ##### 1. 字符串表达式展开
@@ -4210,7 +4377,9 @@
 * 语法
 
   * ```shell
-    if condition; then       
+    if condition; then bod; fi
+    if condition; then  
+    	body
     fi
     
     #### 推荐形式,这样比较容易读，并且无需写分号
@@ -4348,6 +4517,7 @@
 * 语法
 
   * ```shell
+    while comdition; do body; done
     while condition; do
     	body
     done
@@ -4403,6 +4573,8 @@
 * 语法
 
   * ```shell
+    until condition; do body; done
+    
     until condition; do
     	body
     done
@@ -4426,6 +4598,8 @@
   * 传统shell格式
 
     * ```shell
+      for var [in words]; do body; done
+      
       for variable [in words]; do
           commands
       done
@@ -4436,12 +4610,12 @@
       done
       
       ```
-
+      
       * words是一个有顺序的集合，for循环每次循环按顺序将集合words的一个元素赋值给variable。
       * in words省略，那么默认集合是位置参数，也就是一次将$1,$2,$3依次赋值。
-
+      
     * 集合的多种形式
-
+  
       * ```shell
         #命令行手动输入集合
         [me@linuxbox ~]$ for i in A B C D; do echo $i; done
@@ -4457,7 +4631,7 @@
         ```
 
   * C语言格式
-
+  
     * ```shell
       #没啥说的，老朋友了
       for (( expression1; expression2; expression3 )); do
@@ -4479,7 +4653,7 @@
       * expression是一个算术表达式
 
     * 老朋友，老例子
-
+  
       * ```shell
         for ((i=0; i<3; i=i+1))
         do
