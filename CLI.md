@@ -3177,6 +3177,8 @@
 > 所谓shell展开就是将一些特殊的参数展开成实际的参数，然后传达给命令。例如 ls *。 表面上看是ls接受星号作为参数。其实不是，首先是shell将星号展开成具体的ls可以识别的参数，然后传递给ls。
 >
 > **本质就是将形式上的我们输入的参数替换为真正的程序可以接受的参数，然后传递给程序**
+>
+> 本章节的展开仅仅囊括了常用于命令行的展开，一些细节的常用于shell脚本的展开机制见脚本笔记。
 
 ### 3.0 一些类展开机制
 
@@ -3232,7 +3234,9 @@
   * 波浪线后面是空白， 将展开为当前用户家目录路径
   * 波浪线后面紧跟用户名， 将展开为该用户名家目录路径
 
-### 3.4 算术表达式展开(arithmetic expression expansion)
+### 3.4 算术表达式展开
+
+> arithmetic expression expansion
 
 * \$((expression))
 
@@ -3660,30 +3664,298 @@
     * 等号左右两端不能有空格
     * 同命令行一样，如果value是字符串，且包含$,空格等特殊字符，需要按需用双引号或单引号括起来。
 
-* 使用
-
-  * $var
-
-    * 其实就是shell中的变量展开，命令行角度叫变量展开，脚本语言角度就叫使用或引用。
-    * 为什么要用$指示变量，这有个好处就是可以直接在字符串中使用变量
-      * ehoc  "hello $USER"  输出hello linuxlp
-
-  * ${var}
-
-    * 用大括号包起来明确告诉shell这是一个变量。
-  
-      * ```shell
-        test=hello
-        echo $hellolp  #想着省事儿输出hellolp，实际会输出空，因为shell把hellolp整体视为一个变量，该变量不存在，所以输出为空。正确做法：
-        echo ${hello}lp  #显示告诉shell  hello是一个变量
-        ```
-
 * 变量和常量
+
   * shell并不提供区分常量和变量的工具，需要程序员自己维护
     * 常量命名全大写加下划线以示区分
+
 * 全局变量和局部变量
   * 定义在任意函数之外的是全局变量，第一次出现构造，存在于整个程序的生命周期，作用域整个程序。
   * 定义在函数之内的是局部变量，函数执行时创建，执行结束销毁，作用域整个函数。
+#### 5.2.1.1 shell脚本的变量展开机制
+
+##### 1. 普通变量展开
+
+  * 使用非空变量(非空即存在且值不为空)
+
+    * $var
+    
+      * 其实就是shell中的变量展开，命令行角度叫变量展开，脚本语言角度就叫使用或引用。
+      * 为什么要用$指示变量，这有个好处就是可以直接在字符串中使用变量
+        * ehoc  "hello $USER"  输出hello linuxlp
+
+    * ${var}
+
+      * 用大括号包起来明确告诉shell这是一个变量。大括号没有别的意义，就是为了区分变量和字符串
+    
+      * ```shell
+        test=hello	
+        echo $hellolp  #想着省事儿输出hellolp，实际会输出空，因为shell把hellolp整体视为一个变量，该变量不存在，所以输出为空。正确做法：
+        echo ${hello}lp  #显示告诉shell  hello是一个变量
+        ```
+      
+    * ${11}
+    
+        * 访问大于9的位置参数
+
+  * 管理空变量的展开(空指该变量不存在，或值为空)
+  
+    * ${var:-word}
+    
+      * var为空
+    
+        * 结果为word的值
+    
+      * 不为空
+    
+        * 结果为var的值
+    
+      * eg
+    
+        * ```shell
+          [me@linuxbox ~]$ foo=
+          [me@linuxbox ~]$ echo ${foo:-"substitute value if unset"}
+          substitute value if unset
+          
+          [me@linuxbox ~]$ echo $foo
+          [me@linuxbox ~]$ foo=bar
+          [me@linuxbox ~]$ echo ${foo:-"substitute value if unset"}
+          bar
+          [me@linuxbox ~]$ echo $foo
+          bar
+          ```
+    
+    * ${var:=word}
+    
+      * 空
+    
+        * 结果是word的值，同时将word赋值给var(位置参数和一些特殊参数不能这么赋值)
+    
+      * 非空
+    
+        * 结果为var的值
+    
+      * eg
+    
+        * ```shell
+          [me@linuxbox ~]$ foo=
+          [me@linuxbox ~]$ echo ${foo:="default value if unset"}
+          default value if unset
+          [me@linuxbox ~]$ echo $foo
+          default value if unset
+          [me@linuxbox ~]$ foo=bar
+          [me@linuxbox ~]$ echo ${foo:="default value if unset"}
+          bar
+          [me@linuxbox ~]$ echo $foo
+          bar
+          ```
+    
+    * ${var:？word}
+    
+      * 空
+    
+        * 终止脚本并报错，错误信息word输出到stderr
+    
+      * 非空
+    
+        * 结果为word的值
+    
+      * eg
+    
+        * ```shell
+          [me@linuxbox ~]$ foo=
+          [me@linuxbox ~]$ echo ${foo:?"parameter is empty"}
+          bash: foo: parameter is empty
+          [me@linuxbox ~]$ echo $?
+          1
+          [me@linuxbox ~]$ foo=bar
+          [me@linuxbox ~]$ echo ${foo:?"parameter is empty"}
+          bar
+          [me@linuxbox ~]$ echo $?
+          0
+          ```
+    
+    * $(var:+word)
+    
+      * 空
+    
+        * 结果是空
+    
+      * 非空
+    
+        * 结果是word(但是不会改变var的值)
+    
+      * eg
+    
+        * ```shell
+          [me@linuxbox ~]$ foo=
+          [me@linuxbox ~]$ echo ${foo:+"substitute value if set"}
+          
+          [me@linuxbox ~]$ foo=bar
+          [me@linuxbox ~]$ echo ${foo:+"substitute value if set"}
+          substitute value if set
+          
+          ```
+
+##### 2. 字符串展开
+
+> 行为类似字符串处理函数
+
+* ${#string}
+
+    * 结果是字符串变量的长度
+
+        * ```shell
+          linuxlp@LPPC:~/GitRepo/Linux$ foo="nmsl"
+          linuxlp@LPPC:~/GitRepo/Linux$ echo ${#foo}
+          4
+          ```
+
+* ${string:offset}  /${string:offset:length}
+
+    * 结果是截取的字符串变量
+
+        * offset
+
+            * 指示的字符的截取位置
+            * 如果是正数，表示从左到右第几个
+            * 如果是负数，表示从右到左第几个，为了区别于${var:-word}，offset和冒号之间空一格
+
+        * lenth
+
+            * 指定截取长度
+            * 省略表示截取到尾。
+
+        * ```shell
+            linuxlp@LPPC:~/GitRepo/Linux$ foo="abcdefghijklmn"
+            linuxlp@LPPC:~/GitRepo/Linux$ echo ${foo:4}
+            efghijklmn
+            linuxlp@LPPC:~/GitRepo/Linux$ echo ${foo:4:3}
+            efg
+            
+            linuxlp@LPPC:~/GitRepo/Linux$ echo ${foo: -4}
+            klmn
+            linuxlp@LPPC:~/GitRepo/Linux$ echo ${foo: -4:2}
+            kl
+            
+            ```
+
+* ${string#pattern}  / ${string##pattern}
+
+    * 从开头开始去掉pattern指示的子串，显示剩下的部分
+
+        * pattern
+
+            * glob通配符
+
+        * #表示最小匹配，##表示最大匹配
+
+        * ```shell
+            linuxlp@LPPC:~/GitRepo/Linux$ foo="lp.txt.exe"
+            linuxlp@LPPC:~/GitRepo/Linux$ echo ${foo#*.}
+            txt.exe
+            linuxlp@LPPC:~/GitRepo/Linux$ echo ${foo##*.}
+            exe
+            ```
+
+* ${string%pattern}  / ${string%%pattern}
+
+    * 基本同上，区别就是从结尾开始去掉匹配，显示剩下的。
+
+    * ```shell
+        linuxlp@LPPC:~/GitRepo/Linux$ foo="lp.txt.exe"
+        linuxlp@LPPC:~/GitRepo/Linux$ echo ${foo%.*}
+        lp.txt
+        linuxlp@LPPC:~/GitRepo/Linux$ echo ${foo%%.*}
+        lp
+        ```
+
+* ${parameter/pattern/string}
+
+* ${parameter//pattern/string}
+
+* ${parameter/#pattern/string
+
+* ${parameter/%pattern/string
+
+    * 显示字符串替换后的结果
+
+        * pattern
+
+            * 搜索的模式，global
+
+        * string
+
+            * 作为替换的字符串，为空，表示替换为空，也就等于删除
+
+        * /pattern  只替换第一个匹配
+
+        * //pattern 替换所有的匹配
+
+        * /#pattern 替换只在字符串开头的匹配
+
+        * /%pattern 替换只在字符串结尾的匹配
+
+        * ```shell
+            [me@linuxbox~]$ foo=JPG.JPG
+            [me@linuxbox ~]$ echo ${foo/JPG/jpg}
+            jpg.JPG
+            [me@linuxbox~]$ echo ${foo//JPG/jpg}
+            jpg.jpg
+            [me@linuxbox~]$ echo ${foo/#JPG/jpg}
+            jpg.JPG
+            [me@linuxbox~]$ echo ${foo/%JPG/jpg}
+            JPG.jpg
+            ```
+
+
+> 许多时候我们要规范化(normalize)字符串变量，使其全大写或全小写。比如我们接受用输入然后查询数据库，用户的输入可能是大写，小写或者混杂，数据库的key却只有一种，这种情况就要求我们规范化用户的输入。
+
+* declare
+
+    * declare -u var
+
+        * -u选项申明的字符串变量，强制它的值永远是大写(upper)的字符串，不管给它赋什么形式的字符串。
+
+    * declare -l   var
+
+        * -l选项申明的字符串变量，强制它的值永远是小写(lower)的字符串，不管给它赋什么形式的字符串。
+
+        * ```shell
+            linuxlp@LPPC:~/GitRepo/Linux$ declare -u test1; declare -l test2
+            linuxlp@LPPC:~/GitRepo/Linux$ test1="aBc";test2="aBc"
+            linuxlp@LPPC:~/GitRepo/Linux$ echo $test1 $test2
+            ABC abc
+            ```
+
+* 除了declare还有4个参数展开机制可以用于大小写转换
+
+    * | 格式           | 结果                                                        |
+      | :------------- | :---------------------------------------------------------- |
+      | ${parameter,,} | 把 parameter 的值全部展开成小写字母。                       |
+      | ${parameter,}  | 仅仅把 parameter 的第一个字符展开成小写字母。               |
+      | ${parameter^^} | 把 parameter 的值全部展开为大写字母。                       |
+      | ${parameter^}  | 仅仅把 parameter 的第一个字符转换成大写字母（首字母大写）。 |
+
+    * ```shell
+      #!/bin/bash
+      # ul-param - demonstrate case conversion via parameter expansion
+      if [[ $1 ]]; then
+          echo ${1,,}
+          echo ${1,}
+          echo ${1^^}
+          echo ${1^}
+      fi
+      
+      #执行
+      [me@linuxbox ~]$ ul-param aBc
+      abc
+      aBc
+      ABC
+      ABc
+      ```
+
+
 
 ### 5.2.2 函数
 
@@ -3728,9 +4000,197 @@
     * 正确的做法就是一股脑定义所有函数，空的就行，也可以加一些说明。
     * 把这些函数当做已经实现了的函数一样使用，这样在早期阶段就可以完成测试程序的逻辑流程，之后就可以慢慢一个一个实现了，好办法。
 
-### 5.2.3 流程控制(flow control)
+### 5.2.3 表达式
 
-#### 5.2.3.0 顺序(sequences)
+>  expression
+
+#### 5.2.3.1 整数表达式
+
+> shell本身只支持整数运算。
+>
+> 整数表达式指操作数是整数变量或者整数字面值的表达式
+>
+> 整数表达式一共两种：整数算术表达式和整数逻辑表达式
+
+##### 1. 整数表达式展开
+
+* 概念
+  * 使用整数表达式，就是使用整数表达式的值，主要有两种作用
+    * 赋值
+    * 条件判断
+  * shell跟C++不一样，不可以直接使用整数表达式的值，需要借用展开机制
+    * 赋值使用
+      * var = **$(( expression ))**
+      * var的只就是整数表达式的计算结果
+    * 条件判断使用
+      * if **(( expression ))** ; then commands; fi
+        * 整数表达式结果非0，表示真，0表示假。
+
+##### 2. 整数表达式分类
+
+* 定义
+
+  * 采用算术运算符的是整数算术表达式，表达式的结果是实际的计算结果。
+  * 采用逻辑运算符的是整数逻辑表达式，表达式的结果是0或1.
+
+* 运算数(operand)
+
+  * 支持不同进制的整数
+
+  * | Notation    | Descriptioon                                                 |
+    | :---------- | :----------------------------------------------------------- |
+    | number      | 默认情况下，没有任何表示法的数字被看做是十进制数（以10为底）。 |
+    | 0number     | 在算术表达式中，以零开头的数字被认为是八进制数。             |
+    | 0xnumber    | 十六进制表示法                                               |
+    | base#number | number是 以 base 为底的数                                    |
+
+    * ```shell
+      linuxlp@LPPC:~/GitRepo/Linux$ echo $((11))
+      11
+      linuxlp@LPPC:~/GitRepo/Linux$ echo $((011))
+      9
+      linuxlp@LPPC:~/GitRepo/Linux$ echo $((0x11))
+      17
+      linuxlp@LPPC:~/GitRepo/Linux$ echo $((2#11))
+      3
+      ```
+
+* 运算符(operator)
+
+  * 算术运算符(arithmetic operators)
+
+    * | Operator | Description                          | Operator | Description |
+      | -------- | ------------------------------------ | -------- | ----------- |
+      | +        | 正.(一元运算符 unary operator)       | ~        | 位运算取反  |
+      | -        | 负                                   | &        | 位运算与    |
+      | +        | Addition.(二元运算符binary operator) | \|       | 位运算非    |
+      | -        | Subtraction.减                       | ^        | 位运算异或  |
+      | *        | Multiplication.乘                    | <<       | 左移位      |
+      | /        | Integer division.**整**除。          | >>       | 右移位      |
+      | **       | Exponentiation.乘方                  | &=       |             |
+      | %        | Modulo(remainder)取模（余数）        | \|=      |             |
+      | =        | 同C++,表达式值为被赋值变量的值       | ^=       |             |
+      | +=       | a+=b 即 a=a+b  复合赋值              | <<=      |             |
+      | -=       |                                      | >>=      |             |
+      | *=       |                                      |          |             |
+      | /=       |                                      |          |             |
+      | %=       |                                      |          |             |
+      | i++      | 自增,后置先用后增,前置先增后用       |          |             |
+      | ++i      |                                      |          |             |
+      | i--      |                                      |          |             |
+      | --i      |                                      |          |             |
+
+  * 逻辑运算符(logical operator)
+
+    * | Operator          | Description                                                  |
+      | :---------------- | :----------------------------------------------------------- |
+      | <=                | Less than or equal to                                        |
+      | >=                | great than or equal to                                       |
+      | <                 | less than                                                    |
+      | >                 | greater than                                                 |
+      | ==                | Equal to                                                     |
+      | !=                | Not equal to                                                 |
+      | &&                | 逻辑与或非,用于复合逻辑表达式                                |
+      | \|\|              |                                                              |
+      | ！                |                                                              |
+      | expr1?expr2:expr3 | Comparison (ternary) operator. If expression expr1 evaluates to be non-zero (arithmetic true) then expr2, else expr3.（ternary operator 三元运算符） |
+
+#### 5.2.3.2 字符串表达式
+
+##### 1. 字符串表达式展开
+
+* 概念
+  * 使用字符串表达式只有一种作用
+    * 条件判断
+  * shell跟C++不一样，充当条件表达式时需要借助展开机制
+    * if  **[[ expression ]]** ; then commands; fi
+      * expression为真，则true，反之false
+      * 这是现代用法，建议用这个。
+    * if  [ expression ] ; then commands; fi
+    * if test expression; then commands; fi
+      * 这两个是上古用法，最好不用。
+
+##### 2. 字符串表达式形式
+
+* 操作数
+
+  * 字符串变量或者字符串字面值
+
+* 操作符
+
+  * | Expression         | 为真情况                                                     |
+    | :----------------- | :----------------------------------------------------------- |
+    | string             | string is not null.                                          |
+    | -n string          | The length of string is greater than zero.(非空字符串)       |
+    | -z string          | The length of string is zero.（空字符串）                    |
+    | string1 == string2 | string2可以为常规字符串，也可以包含通配符，匹配为真。        |
+    | string1 =~ string2 | string2可以是正则，不是完全匹配，只要string1包含string2所指定的pattern，就返回真 |
+    | string1 != string2 | string1 and string2 are not equal.                           |
+    | string1 > string2  | 按照字典顺序排序，string1大于2(即在2后面，例如bb > aa)。当然具体排序也可能不是字典序，自己看吧。 |
+    | string1 < string2  | 同上，小于。                                                 |
+    | &&                 | 逻辑与或非,用于复合逻辑表达式                                |
+    | \|\|               |                                                              |
+    | !                  |                                                              |
+
+    * 上表列出的都是[[ expression ]]支持的运算，[ expression ]基本支持，但是有一堆要特殊处理的，所以太麻烦了，这里不列出了，狗都不用 [ expression ].
+
+#### 5.2.3.3 文件表达式
+
+> 这名字是我起的，shell通过展开机制直接支持与文件相关的一系列条件判断。
+
+##### 1. 文件表达式展开
+
+* 概念
+  * 使用文件表达式只有一种作用
+    * 条件判断
+  * 展开机制
+    * if  **[[ expression ]]** ; then commands; fi
+      * expression为真，则true，反之false
+      * 这是现代用法，建议用这个。
+    * if  [ expression ] ; then commands; fi
+    * if test expression; then commands; fi
+      * 这两个是上古用法，最好不用。
+
+##### 2. 文件表达式形式
+
+* 操作数
+
+  * 字符串变量或者字符串字面值，但是假定这个字符串是一个文件名
+
+* 操作符
+
+  * | Expression           | 为真情况                                                     |
+    | :------------------- | :----------------------------------------------------------- |
+    | file1 -ef      file2 | equal file.具有相同inode节点。(说明file1,file2是硬链接，本质确实是同一个文件) |
+    | file1 -nt file2      | newer than。文件1比2新。                                     |
+    | file1 -ot file2      | older than 。文件1比2旧。                                    |
+    | -b file              | file exists and is a block special (device) file.            |
+    | -c file              | file exists and is a character special (device) file.        |
+    | -d file              | file exists and is a directory.                              |
+    | -e file              | file exists.                                                 |
+    | -f file              | file exists and is a regular file.                           |
+    | -g file              | file exists and is set-group-ID.                             |
+    | -G file              | file exists and is owned by the effective group ID.          |
+    | -k file              | file exists and has its “sticky bit” set.                    |
+    | -L file              | file exists and is a symbolic link.                          |
+    | -O file              | file exists and is owned by the effective user ID.           |
+    | -p file              | file exists and is a named pipe.(命名管道)                   |
+    | -r file              | file exists and is readable (has readable permission for the effective user). |
+    | -s file              | file exists and has a length greater than zero.(就是非空文件呗) |
+    | -S file              | file exists and is a network socket.                         |
+    | -t fd                | fd is a file descriptor directed to/from the terminal. This can be used to determine whether standard input/output/ error is being redirected. |
+    | -u file              | file exists and is setuid.                                   |
+    | -w file              | file exists and is writable (has write permission for the effective user). |
+    | -x file              | file exists and is executable (has execute/search permission for the effective user). |
+    | &&                   | 逻辑与或非，用于复合逻辑表达式                               |
+    | \|\|                 |                                                              |
+    | ！                   |                                                              |
+
+### 5.2.4 流程控制
+
+> flow control
+
+#### 5.2.4.0 顺序(sequences)
 
 ##### 1. 顺序执行
 
@@ -3743,26 +4203,20 @@
 * sleep n
   * 脚本执行到这里，睡眠n 秒
 
-#### 5.2.3.1分支(branch)
+#### 5.2.4.1分支(branch)
 
 ##### 1. if  
 
 * 语法
 
   * ```shell
-    if commands; then          #1. 本质形式
+    if condition; then       
     fi
     
-    if test expression; then   #2. 衍生形式
-    fi
-    
-    if [ expression ]; then    #3.常用形式
-    fi
-    
-    if [[ expression ]]; then   #4.现代常用形式1
-    fi
-    
-    if (( expression )); then    #5.现代常用形式2
+    #### 推荐形式,这样比较容易读，并且无需写分号
+    if condition
+    then
+    	body
     fi
     
     if condition; then    #if else 写法
@@ -3773,127 +4227,34 @@
     elif condition; then
     else
     fi
-    #### 推荐形式,这样比较容易读，并且无需写分号
-    if condition
-    then
-    	body
-    fi
+    
     ```
+  
+* condition
 
-* 判断条件
+  * 概念
 
-  * shell的if的判断条件比较特殊，不是(expression)形式，而是命令形式(commands).
-  * 这个位置可以是任何命令，if根据命令的返回状态(exit status)执行流程，如果是0说明命令执行成功，表示true，非0表示表示命令执行失败，表示false.
-  * true和false命令
-    * shell内建命令，唯一的作用就是true执行后exit status为0，false为1.
-    * 所以可   if  true   来表示条件永远为真。
-  * 那么问题来了，如何将表达式作为条件？
-    * 老方法
-      * 引入test命令，test接受后面的表达式参数，如果表达式为真，test返回0，表达式为假，test返回1。这样就间接实现了条件是表达式而不是命令。
-      * 每次都写test太烦了，所以用[ expression ]形式代替 test expression形式，简洁。但是切记后者才是本质。shell if没有直接判断表达式的本事，本质是判断命令返回值。
-    * 新方法
-      * 引入[[ expression ]]机制，基本功能和[ expression ]一样，只是增加了对包含正则表达式的expression的支持。[ expression ]也就是test命令形式是POSIX标准的一部分，更通用，[[ expression ]]特定于不同的shell，可能会不通用，但是更好用。
-      * 引入(( expression ))机制，专门为算数表达式设计
+    * shell的if的条件判断部分比较特殊:
+      * C++这部分是表达式，表达式值非0那么为真，0为假。
+      * shell这部分是命令，命令执行成功返回状态(exit status) 为0，条件为真，命令执行失败，返回非0，条件为假。
+      * 也就是说条件真假取决于命令的返回值。
 
-* 注
+  * 几种形式
+    * commands
+      * 本质的命令形式，如果exit status 为0，真，非0， 假。
+      * 如果多个命令，那么真假取决于最后一个命令的exit status
+      * true 和false命令
+        * shell内建命令，唯一的作用就是true执行后exit status为0，false为1.
+        * 所以可   if  true   来表示条件永远为真
 
-  * if condition ; then 如果condition是commands，那么分号必须有，如果是[],[[]]或(())，可以没分号。
-    * **太操蛋了，建议另起一行写then，这样都无需分号，而且可读，不用记这些有的没的。**
-  * [ expression ]、[[ expression ]] 、(( expression )) expression两边一定一定要有空格。否则提示parse error
-  * 建议用[[ expression ]]形式，简单强大好用
+    * test expression或[ expression ]
+      * 上古形式，借助test的包装，test测试expression的真假，然后根据表达式真假返回对应的exit status, 比如expression为真，那么test返回0，这样最后条件为真。
 
-* 简单expression
+    * [[ expression ]], (( expression ))
+      * 现代形式，就是shell展开的整数、字符串、文件表达式用于条件判断的情形。
+      * 这种机制和test差不多，就是将expression的真假映射为if可以识别的exit status，实现最终的条件判断。
+      * 这种形式支持的表达式更加现代，更加可读，建议使用这种形式。
 
-  > 后面加[]，表示[ expression ]支持，加[[]] 表示[[ expression ]]支持，加(())表示(( expression ))支持
-
-  * file expression([],[[]])
-
-    * | Expression      | 为真情况                                                     |
-      | :-------------- | :----------------------------------------------------------- |
-      | file1 -ef file2 | equal file.具有相同inode节点。(说明file1,file2是硬链接，本质确实是同一个文件) |
-      | file1 -nt file2 | newer than。文件1比2新。                                     |
-      | file1 -ot file2 | older than 。文件1比2旧。                                    |
-      | -b file         | file exists and is a block special (device) file.            |
-      | -c file         | file exists and is a character special (device) file.        |
-      | -d file         | file exists and is a directory.                              |
-      | -e file         | file exists.                                                 |
-      | -f file         | file exists and is a regular file.                           |
-      | -g file         | file exists and is set-group-ID.                             |
-      | -G file         | file exists and is owned by the effective group ID.          |
-      | -k file         | file exists and has its “sticky bit” set.                    |
-      | -L file         | file exists and is a symbolic link.                          |
-      | -O file         | file exists and is owned by the effective user ID.           |
-      | -p file         | file exists and is a named pipe.(命名管道)                   |
-      | -r file         | file exists and is readable (has readable permission for the effective user). |
-      | -s file         | file exists and has a length greater than zero.(就是非空文件呗) |
-      | -S file         | file exists and is a network socket.                         |
-      | -t fd           | fd is a file descriptor directed to/from the terminal. This can be used to determine whether standard input/output/ error is being redirected. |
-      | -u file         | file exists and is setuid.                                   |
-      | -w file         | file exists and is writable (has write permission for the effective user). |
-      | -x file         | file exists and is executable (has execute/search permission for the effective user). |
-
-  * string expression([],[[]])
-
-    * | Expression         | 为真情况                                                     |
-      | :----------------- | :----------------------------------------------------------- |
-      | string             | string is not null.                                          |
-      | -n string          | The length of string is greater than zero.(非空字符串)       |
-      | -z string          | The length of string is zero.（空字符串）                    |
-      | string1 = string2  | string1 and string2 are equal.                               |
-      | string1 != string2 | string1 and string2 are not equal.                           |
-      | string1 > string2  | 按照字典顺序排序，string1大于2(即在2后面，例如bb > aa)。当然具体排序也可能不是字典序，自己看吧。 |
-      | string1 < string2  | 同上，小于。                                                 |
-
-      * \>,\<用于[ express ]要加引号，否则会被理解为重定向。用于[[ expression ]]时不用。
-      * 所有操作符(=,!=, >,<)两边都要有空格！！！(test模式要用，[[]]不用)
-
-  * Integer Expression（整型表达式）([],[[]])
-
-    * | Expression            | 为真情况                                       |
-      | :-------------------- | :--------------------------------------------- |
-      | integer1 -eq integer2 | integer1 is equal to integer2.                 |
-      | integer1 -ne integer2 | integer1 is not equal to integer2.             |
-      | integer1 -le integer2 | integer1 is less than or equal to integer2.    |
-      | integer1 -lt integer2 | integer1 is less than integer2.                |
-      | integer1 -ge integer2 | integer1 is greater than or equal to integer2. |
-      | integer1 -gt integer2 | integer1 is greater than integer2.             |
-
-      * integer除了常规的整型变量和整型字面值作为操作数外，还支持算术表达式($(())包起来)。
-        * [ $num -eq 2]    ,   [ $((2+2))  -eq  4]
-
-  * [[ expression ]]独有
-
-    * | Expression         | 为真                                                         |
-      | ------------------ | ------------------------------------------------------------ |
-      | string1 == string2 | string2可以为常规字符串，也可以包含通配符，匹配为真。        |
-      | string1 =~ string2 | string2可以是正则，不是完全匹配，只要string1包含string2所指定的pattern，就返回真 |
-
-  * (( expression)) 独有
-
-    * 支持对单个算术表达式结果的判断，为0假，非0真。
-
-      * 支持 ==， > , < ，使用整型变量时无需用$,使用算术表达式时，无需用$(())
-
-      * ```shell
-        INT=5
-        if (( INT == 0))
-        if (( INT > 0))
-        if (( INT < 0))
-        if (( (INT % 2) == 1 ))
-        ```
-
-* 复合表达式
-
-  * 用与或非连接表达式
-
-  * | Operation | test([]) | [[ ]] and (( )) |
-    | :-------- | :------- | :-------------- |
-    | AND       | -a       | &&              |
-    | OR        | -o       | \|\|            |
-    | NOT       | !        | !               |
-
-    * [ expression ]使用 -a, -o ，!表示与或非，使用()来整理优先级，但是切记()要转义。
-    * [[]],(())更易用，使用通用的&&,||,!,使用()整理优先级，无需转义
 
 ##### 2. || 和 &&
 
@@ -3980,7 +4341,7 @@
 
         
 
-#### 5.2.3.2 循环(looping)
+#### 5.2.4.2 循环(looping)
 
 ##### 1. while
 
@@ -4133,7 +4494,7 @@
 * break
   * 跳出循环
 
-### 5.2.4 IO
+### 5.2.5 IO
 
 #### 1. input
 
@@ -4218,9 +4579,11 @@
 
 [printf](#printf(print formatted))
 
-### 5.2.5 位置参数(positional parameters)
+### 5.2.6 位置参数
 
-#### 5.2.5.1 传递实参
+> positional parameters
+
+#### 5.2.6.1 传递实参
 
 ##### 1. 脚本(shell script)
 
@@ -4249,7 +4612,7 @@
   * 命令行调用时，$0无效，不会显示脚本函数名
   * 脚本中调用传参时，参数意义完全同脚本。
 
-#### 5.2.5.2 批量处理位置参数
+#### 5.2.6.2 批量处理位置参数
 
 ##### 1. shift
 
