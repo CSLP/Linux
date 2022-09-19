@@ -3747,7 +3747,7 @@
 
 ##### 1. if  
 
-* 形式
+* 语法
 
   * ```shell
     if commands; then          #1. 本质形式
@@ -3773,7 +3773,7 @@
     elif condition; then
     else
     fi
-    #### 推荐形式,这样比较容读，并且无需写分号
+    #### 推荐形式,这样比较容易读，并且无需写分号
     if condition
     then
     	body
@@ -3845,7 +3845,7 @@
       | string1 < string2  | 同上，小于。                                                 |
 
       * \>,\<用于[ express ]要加引号，否则会被理解为重定向。用于[[ expression ]]时不用。
-      * 所有操作符(=,!=, >,<)两边都要有空格！！！
+      * 所有操作符(=,!=, >,<)两边都要有空格！！！(test模式要用，[[]]不用)
 
   * Integer Expression（整型表达式）([],[[]])
 
@@ -3924,13 +3924,14 @@
 
   * 基本就是字符串匹配加支持通配符。
 
-    * | Pattern      | Description                              |
-      | :----------- | :--------------------------------------- |
-      | a)           | word等于a那么匹配                        |
-      | [[:alpha:]]) | word如果是一个字母字符那么匹配           |
-      | ???)         | word如果是3个字符长的任意字符串那么匹配  |
-      | *.txt)       | word是以.text结尾的字符串那么匹配。      |
-      | *)           | 匹配任意word，相当于实现了默认匹配功能。 |
+    * | Pattern               | Description                                   |
+      | :-------------------- | :-------------------------------------------- |
+      | a)                    | word等于a那么匹配                             |
+      | [[:alpha:]])          | word如果是一个字母字符那么匹配                |
+      | ???)                  | word如果是3个字符长的任意字符串那么匹配       |
+      | *.txt)                | word是以.text结尾的字符串那么匹配。           |
+      | *)                    | 匹配任意word，相当于实现了默认匹配功能。      |
+      | pattern2 \| pattern2) | 支持或模式，例如 a\|A) 表示匹配a或A都执行case |
 
 * 相对于C++的case的特殊之处
 
@@ -3983,7 +3984,7 @@
 
 ##### 1. while
 
-* 形式
+* 语法
 
   * ```shell
     while condition; do
@@ -4038,13 +4039,13 @@
 
 ##### 2. until
 
-* 形式
+* 语法
 
   * ```shell
     until condition; do
     	body
     done
-    
+    ###推荐
     until condition
     do
     	body
@@ -4057,7 +4058,75 @@
   * while当condition为真时执行，until当condition为假时执行
     * 所以  while condition ; do;done  == until !condition ;do; done
 
-##### 3. continue, break
+##### 3. for
+
+* 语法
+
+  * 传统shell格式
+
+    * ```shell
+      for variable [in words]; do
+          commands
+      done
+      ###建议
+      for variable [in words]
+      do
+          commands
+      done
+      
+      ```
+
+      * words是一个有顺序的集合，for循环每次循环按顺序将集合words的一个元素赋值给variable。
+      * in words省略，那么默认集合是位置参数，也就是一次将$1,$2,$3依次赋值。
+
+    * 集合的多种形式
+
+      * ```shell
+        #命令行手动输入集合
+        [me@linuxbox ~]$ for i in A B C D; do echo $i; done
+        
+        #花括号展开的集合
+        [me@linuxbox ~]$ for i in {A..D}; do echo $i; done
+        
+        #路径名展开的集合
+        [me@linuxbox ~]$ for i in distros*.txt; do echo $i; done
+        
+        #命令展开的集合
+        [linuxlp at LPPC in ~/fun]$ for i in $(ls -l);do echo $i;done
+        ```
+
+  * C语言格式
+
+    * ```shell
+      #没啥说的，老朋友了
+      for (( expression1; expression2; expression3 )); do
+          commands
+      done
+      ###建议
+      for (( expression1; expression2; expression3 ))
+      do
+          commands
+      done
+      #同样，基本等价于，小区别就是commands后如果有continue，for的expression3执行，while不执行
+      (( expression1 ))
+      while (( expression2 )); do
+          commands
+          (( expression3 ))
+      done
+      ```
+
+      * expression是一个算术表达式
+
+    * 老朋友，老例子
+
+      * ```shell
+        for ((i=0; i<3; i=i+1))
+        do
+        	echo $i
+        done
+        ```
+
+##### 4. continue, break
 
 * continue
   * 跳过本次循环，直接执行下一次
@@ -4148,6 +4217,117 @@
 [echo](#echo)
 
 [printf](#printf(print formatted))
+
+### 5.2.5 位置参数(positional parameters)
+
+#### 5.2.5.1 传递实参
+
+##### 1. 脚本(shell script)
+
+* 作用
+  * 提供给程序，借此来在程序代码中使用命令行传给程序的参数
+* 位置参数
+  * $0
+    * $0代表程序的完整路径名(例如/usr/bin/ls)
+    * 如果只想要基本的名字，例如ls，而不是/usr/bin/ls, 可以
+      * **NAME=$(basename $0)**
+        * basename命令获取程序的基础名字，忽略掉路径。
+  * $1,$2,$3...$9
+    * 默认提供$1-$9 9个位置参数来表示实参
+    * $1-$9依次表示程序从命令行处接受的第一到第九个实参(argument)
+  * ${}
+    * 如果想使用超过9个的参数，利用这种形式,${30}表示第30个参数
+  * $#
+    * 表示输入的实参的个数(不包括程序名本身)
+
+##### 2. 脚本函数(shell function)
+
+* 作用
+  * 同理命令行调用脚本函数时传递实参。
+  * 或者在脚本中调用脚本函数时传递实参。
+* 与脚本的区别
+  * 命令行调用时，$0无效，不会显示脚本函数名
+  * 脚本中调用传参时，参数意义完全同脚本。
+
+#### 5.2.5.2 批量处理位置参数
+
+##### 1. shift
+
+* 作用
+
+  * shift命令类似移位，将所有实参整体左移一位，并且$#减1.
+
+    * ```shell
+      #命令行执行，表示接受4个参数
+      test.sh  a b c d
+      
+      #test.sh内部
+      # $#=4 ,$1=a, $2=b, $3=c ,$4=d
+      shift	#执行shift命令后
+      # $#=3, $1=b, $2=c, $3=d
+      这样就可以搞个循环，每次操作$1,然后操作一次shift，就可以仅仅通过$1来表示所有实参
+      ```
+
+##### 2. $*/$@
+
+* 作用
+
+  * 用于函数或程序之间传递参数，常用于包裹程序(wrapper)
+    * 所谓包裹程序就是比如一个程序我们没有调用权限，然后人家提供一个包裹程序，我们调用包裹程序，该程序把接收到的参数传递给真正的执行程序
+
+* 形式
+
+  > $*和$@基本相同，有一点细微差异，看例子吧。
+
+  * $*/ $@
+    * 分离参数，然后传递之
+  * "$*"  / $@
+    * 整体传递，原封不动
+
+* eg
+
+  * ```shell
+    # pass_script 脚本如下
+    print_params()
+    {
+    	echo "\$1 = $1"
+        echo "\$2 = $2"
+        echo "\$3 = $3"
+        echo "\$4 = $4"
+    }
+    pass_params()
+    {
+       #最累、最普通的办法：		   print_params  $1 $2
+    	echo -e "\n" '$* :';      print_params   $*
+        echo -e "\n" '"$*" :';    print_params   "$*"
+        echo -e "\n" '$@ :';      print_params   $@
+        echo -e "\n" '"$@" :';    print_params   "$@"
+    }
+    pass_params "word" "words with spaces"
+    #pass_params相当于print_params的包裹程序，将参数传递给它，该程序显示了4种成批传送办法.以下是对应的结果。
+     $* :
+    $1 = word
+    $2 = words
+    $3 = with
+    $4 = spaces
+     "$*" :
+    $1 = word words with spaces
+    $2 =
+    $3 =
+    $4 =
+     $@ :
+    $1 = word
+    $2 = words
+    $3 = with
+    $4 = spaces
+     "$@" :
+    $1 = word
+    $2 = words with spaces
+    $3 =
+    $4 =
+    ```
+
+    * 可见"$@"时最常见的用法，实现了准确的传参。
 
 ## 5.3 Debug
 
