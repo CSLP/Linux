@@ -274,7 +274,7 @@
 * regular file                普通文件
 * directory                   目录文件
 * symbolic link            链接文件
-* FIFO(pipe)                 管道文件
+* FIFO(pipe)                 管道文件(named pipe命名管道文件)
 * socket                       套接字文件
 * character special file      字符设备文件
   * 指按照字节流处理数据的设备，常见的是terminal和modem(调制解调器)

@@ -365,7 +365,7 @@
       * @
         * symbolic links 符号链接，软连接
       * | 
-        * FIFOs    管道文件
+        * FIFOs   命名管道(named pipes)文件
       * =
         * sockets  套接字文件
       * \>
@@ -2353,7 +2353,9 @@
 
 ## 2.6 IO重定向(redirection)
 
-###### \>、\>\>     (stdout redirection)
+###### \>、\>\>   
+
+>  stdout redirection
 
 * **SYNOPSIS**
   * <u>COMMOND</u> > <u>FILE</u>
@@ -2377,7 +2379,9 @@
 
     
 
-###### 2>、2\>\>       (stderr redirection)
+###### 2>、2\>\>     
+
+> stderr redirection
 
 * **SYNOPSIS**
 
@@ -2393,24 +2397,25 @@
 
     
 
-###### &>       (stderr and stdout redirection)
+###### &>       
+
+> stderr and stdout redirection)
 
 * stdout, stderr 都默认定向到屏幕，如果想将两者同时定向到某一文件，利用&>
   * <u>COMMOND</u> &> <u>FILE</u>
     * 旧的方法是  <u>COMMOND</u> > <u>FILE</u> 2>&1  
-      * 就方法，少用，不过暗示了重定位的顺序，首先stdout输出到文件，然后stderr输出。新的方法也是这个顺序。
+      * 旧方法，少用，不过暗示了重定位的顺序，将stderr重定向到stdout, 然后stdout重定向到文件，这样就实现了stderr, stdout都重定向到文件。新的方法也是这个顺序。
 
+###### <      
 
-
-###### <      (stdin redirection)
+>  stdin redirection
 
 * 重定向stdin
   * stdin由键盘重定向到文件。
   * eg
     * cat < file  
 
-
-###### <<   (here document)
+###### <<   
 
 > here document 或here script
 
@@ -2479,8 +2484,9 @@
       _EOF_
       ```
 
+###### <<<
 
-###### <<<(here string)
+> here string
 
 * 重定向stdin
   * stdin由键盘重定向到一个字符串
@@ -2490,12 +2496,124 @@
     * eg
       * cat   <<< "nmsl"
 
-###### \|    (管道(vertical bar竖线))
+###### \|    
+
+>  管道(vertical bar竖线)
 
 * 管道可以说是shell自带的重定向了，**将竖线前面命令的标准输出重定向到竖线后面命令的标准输入。**
 * 也可以表述为下游命令接收的输入为相邻的上游命令的输出。
 
+###### mkfifo
 
+> make FIFO
+
+* **NAME**
+
+  * mkfifo - make FIFOs (named pipes)
+
+* **SYNOPSIS**
+
+  * mkfifo [<u>OPTION</u>]... <u>NAME</u>...
+
+* **DESCRIPTION**
+
+  > Create named pipes (FIFOs) with the given NAMEs.
+
+  * 普通的管道就是一个FIFO结构，先进先出。
+
+  * 命名管道是一类特殊文件，像一个管道一样，用于进程间通信,本质是一个FIFO缓冲区
+
+  * 可以用于client-server结构之间通讯，CS通信可以用命名管道方式，也可以通过网络
+
+    * ```shell
+      process1 > named_pipe
+      process2 < named_pipe
+      #进程1的信息流入命令管道，然后进程2从管道中获得进程1流入的信息
+      #行为类似
+      process1 | process2
+      ```
+
+* eg
+
+  * ```shell
+    linuxlp at LPPC in ~/fun
+    ○ mkfifo  pipe1
+    
+    linuxlp at LPPC in ~/fun
+    ○ ls -l
+    total 0
+    prw-rw-r-- 1 linuxlp linuxlp 0 9月  20 14:39 pipe1
+    #创建一个pipe1命名管道，可以看到开头p表示named pipe文件
+    ls -a > pipe1   #在终端1执行命令，命令会挂起,称为管道阻塞(pipe blocked)
+    
+    cat < pipe1		#在新的一个终端执行命令，cat显示终端1的ls -a的输出，同时终端1命令结束挂起
+    ```
+
+###### { com1;com2;com3 } 
+
+###### ( com1;com2;com3 )
+
+> com表示command
+
+* 复合命令(Compound Commands)
+
+  * shell允许命令成组(allows commands to be grouped together)
+  * 实现机制有上面两种
+    * 花括号(brace)包起来——组命令(命令和花括号之间一定要有空格)
+    * 圆括号(parentheses)包起来——subshell
+
+* 作用
+
+  * 常用于重定向，可以自动按照命令顺序组合多个命令的输出到stdout
+
+* 应用
+
+  * ```shell
+    touch testfile
+    #传统模式下，要将多个命令重定向，需要一个一个追加
+    echo "first line" > testfile
+    ls -al >> testfile
+    echo "last line" >> testfile
+    
+    #利用成组机制直接组合输出
+    { echo "first line";ls -al; echo "last line"} > testfile
+    
+    #直接用于管道更是强无敌
+    { echo "first line";ls -al; echo "last line"} | cat
+    
+    #还可以直接用于for循环，也是强无敌
+    { for ((i=1;i<10;i++)); do echo $i; done } | cat
+    ```
+
+* 区别
+
+  * 用组命令，高效，省事儿，安全，所以只用组命令就完事了了
+  * subshell会创建子shell执行，慢，耗内存，并且可能会出现管道执行read那样的问题，子shell的变量会被销毁。
+
+<( com1;com2;com3)
+
+> process substituion 进程替换机制
+
+* 解决read用于管道的问题
+
+  * read不能用于管道，从而read不能方便的接收命令的输出结果。
+
+* <(com1;com2;com3)
+
+  * 本质将命令的输出结果组合到一起，然后模拟成一个文件，这样read就能通过stdin重定向接收命令的输出了
+
+  * ```shell
+    #传统read接收多个命令输出的办法
+    { ls -al; echo nmsl; date } > tempFile
+    read < tempFile
+    
+    #本来最高效的办法是
+    { ls -al; echo nmsl; date } | read
+    可惜这是错的，read不能用于管道
+    
+    #所以提供了进程替换机制来完成这一点
+    read <  <(ls -al; echo nmsl; date)
+    ```
 
 ## 2.7 用户相关
 
@@ -2898,6 +3016,52 @@
 * **DESCRIPTION**
   * 删除名为name的所有的进程。如果指定了用户，只删除该用户的。
   * kill利用pid终止进程，killall利用进程名终止进程。同kill，只有进程的所有者或者superuser才能使用killall终止进程。
+
+###### trap
+
+* **SYNOPSIS**
+
+  * trap  <u>args</u>  <u>sig</u>...
+
+* **DESCRIPTION**
+
+  * 内建命令，用于脚本程序处理系统发来的信号
+
+  * args
+
+    * 字符串，包含收到对应信号后的处理
+
+    * shell函数，收到对应信号后执行
+
+    * ```shell
+      #!/bin/zsh
+      ##arg为字符串，这种形式太笨了，不建议使用
+      trap "echo '爷就不停输出'" SIGSINT SIGTERM
+      #建议使用函数形式，专业
+      exit_on_signal_SIGINT()
+      {
+      	echo "Script interrupted".
+      	exit 0
+      }
+      exit_on_signal_SIGTERM()
+      {
+      	echo "Script terminated."
+      	exit 0
+      }
+      trap exit_on_signal_SIGINT SIGINT
+      trap exit_on_signal_SIGTERM SIGTERM
+      while true
+      do
+      	echo fuck
+      done
+      
+      ```
+
+  * sig
+
+    * 信号名： 例如SIGSTOP，SIGTERM
+
+    
 
 ## 2.9 包管理系统相关
 
@@ -3455,6 +3619,7 @@
 | TZ      | Specifies your timezone. Most Unix-like systems maintain the computer's internal clock in Coordinated Universal Time (UTC) and then displays the local time by applying an offset specified by this variable. |
 | USER    | Your user name.                                              |
 | ？      | echo $?  输出上一个命令或脚本执行的返回结果(exit status)     |
+| RANDOM  | echo $RANDOM 输出一个随机数                                  |
 
 ### 4.2 查看环境
 
@@ -3646,160 +3811,170 @@
 
 ### 5.2.1 变量
 
+#### 5.2.1.1 变量通用
+
+##### 0. 概念
+
 * 命名
   * 字母、下划线、数字
   * 不能数字开头
-
 * 类型
 
   * 无类型，随便赋值，赋什么值就是什么类型
-
-* 构造
-
-  * 无需定义，随用随创建，shell第一次遇到该变量名时就会创建。
-
-* 赋值
-
-  * var=value
-    * 等号左右两端不能有空格
-    * 同命令行一样，如果value是字符串，且包含$,空格等特殊字符，需要按需用双引号或单引号括起来。
-
 * 变量和常量
 
   * shell并不提供区分常量和变量的工具，需要程序员自己维护
     * 常量命名全大写加下划线以示区分
-
 * 全局变量和局部变量
   * 定义在任意函数之外的是全局变量，第一次出现构造，存在于整个程序的生命周期，作用域整个程序。
   * 定义在函数之内的是局部变量，函数执行时创建，执行结束销毁，作用域整个函数。
-#### 5.2.1.1 shell脚本的变量展开机制
 
-##### 1. 普通变量展开
+##### 1.构造或赋值
 
-  * 使用非空变量(非空即存在且值不为空)
+> shell变量没C++那么麻烦，又是构建，又是初始化，又是赋值。。
+>
+> shell变量就一个原则，想用就用，想用就创建一个。
 
+* var=3
+* var=nmsl
+* var="hello  world"
+  * 等号两边不能有空格
+
+##### 2. 变量shell展开
+
+> 为什么shell的变量和表达式不能直接使用，都要展开？
+>
+> 主要在于shell语言的一个特殊之处就是它的脚本的每一行都能在命令行输入直接执行，这就意味着如果没有特殊标记，那么每个标识符都会被解释为命令执行。
+
+* 普通使用
+
+  * 左值
+    * var=234
+  * 右值
     * $var
-    
-      * 其实就是shell中的变量展开，命令行角度叫变量展开，脚本语言角度就叫使用或引用。
-      * 为什么要用$指示变量，这有个好处就是可以直接在字符串中使用变量
-        * ehoc  "hello $USER"  输出hello linuxlp
-
     * ${var}
+      * 建议用这种形式，如果变量比较简单，那么$var还凑活，变量一复杂，最好用大括号括起来明确的指定变量边界，并且明确告诉shell这是一个变量以避免意料之外的展开。
+      * 相比C++,变量充当右值时不能直接使用，需要展开，除了麻烦外也有一个好处，可以直接在字符串中使用变量了:smiley:
+        * hello=nmsl;echo "$hello  Jack"
 
-      * 用大括号包起来明确告诉shell这是一个变量。大括号没有别的意义，就是为了区分变量和字符串
-    
-      * ```shell
-        test=hello	
-        echo $hellolp  #想着省事儿输出hellolp，实际会输出空，因为shell把hellolp整体视为一个变量，该变量不存在，所以输出为空。正确做法：
-        echo ${hello}lp  #显示告诉shell  hello是一个变量
-        ```
-      
-    * ${11}
-    
-        * 访问大于9的位置参数
+* 复杂应用
 
-  * 管理空变量的展开(空指该变量不存在，或值为空)
-  
-    * ${var:-word}
-    
-      * var为空
-    
-        * 结果为word的值
-    
-      * 不为空
-    
-        * 结果为var的值
-    
-      * eg
-    
-        * ```shell
-          [me@linuxbox ~]$ foo=
-          [me@linuxbox ~]$ echo ${foo:-"substitute value if unset"}
-          substitute value if unset
-          
-          [me@linuxbox ~]$ echo $foo
-          [me@linuxbox ~]$ foo=bar
-          [me@linuxbox ~]$ echo ${foo:-"substitute value if unset"}
-          bar
-          [me@linuxbox ~]$ echo $foo
-          bar
-          ```
-    
-    * ${var:=word}
-    
-      * 空
-    
-        * 结果是word的值，同时将word赋值给var(位置参数和一些特殊参数不能这么赋值)
-    
-      * 非空
-    
-        * 结果为var的值
-    
-      * eg
-    
-        * ```shell
-          [me@linuxbox ~]$ foo=
-          [me@linuxbox ~]$ echo ${foo:="default value if unset"}
-          default value if unset
-          [me@linuxbox ~]$ echo $foo
-          default value if unset
-          [me@linuxbox ~]$ foo=bar
-          [me@linuxbox ~]$ echo ${foo:="default value if unset"}
-          bar
-          [me@linuxbox ~]$ echo $foo
-          bar
-          ```
-    
-    * ${var:？word}
-    
-      * 空
-    
-        * 终止脚本并报错，错误信息word输出到stderr
-    
-      * 非空
-    
-        * 结果为word的值
-    
-      * eg
-    
-        * ```shell
-          [me@linuxbox ~]$ foo=
-          [me@linuxbox ~]$ echo ${foo:?"parameter is empty"}
-          bash: foo: parameter is empty
-          [me@linuxbox ~]$ echo $?
-          1
-          [me@linuxbox ~]$ foo=bar
-          [me@linuxbox ~]$ echo ${foo:?"parameter is empty"}
-          bar
-          [me@linuxbox ~]$ echo $?
-          0
-          ```
-    
-    * $(var:+word)
-    
-      * 空
-    
-        * 结果是空
-    
-      * 非空
-    
-        * 结果是word(但是不会改变var的值)
-    
-      * eg
-    
-        * ```shell
-          [me@linuxbox ~]$ foo=
-          [me@linuxbox ~]$ echo ${foo:+"substitute value if set"}
-          
-          [me@linuxbox ~]$ foo=bar
-          [me@linuxbox ~]$ echo ${foo:+"substitute value if set"}
-          substitute value if set
-          
-          ```
+  > 借助展开这个操作，shell集成了一些复杂的操作直接借助展开实现，而不用另外定义标准库。
+  >
+  > 这一特性在字符串和数组部分体现最为明显，许多C++通过标准库函数实现的功能都被shell通过展开机制简单实现了。
 
-##### 2. 字符串展开
+  * ${11}
+
+      * 访问大于9的位置参数
+
+    * 管理空变量的展开(空指该变量不存在，或值为空)
+
+      * ${var:-word}
+
+        * var为空
+
+          * 结果为word的值
+
+        * 不为空
+
+          * 结果为var的值
+
+        * eg
+
+          * ```shell
+            [me@linuxbox ~]$ foo=
+            [me@linuxbox ~]$ echo ${foo:-"substitute value if unset"}
+            substitute value if unset
+            
+            [me@linuxbox ~]$ echo $foo
+            [me@linuxbox ~]$ foo=bar
+            [me@linuxbox ~]$ echo ${foo:-"substitute value if unset"}
+            bar
+            [me@linuxbox ~]$ echo $foo
+            bar
+            ```
+
+      * ${var:=word}
+
+        * 空
+
+          * 结果是word的值，同时将word赋值给var(位置参数和一些特殊参数不能这么赋值)
+
+        * 非空
+
+          * 结果为var的值
+
+        * eg
+
+          * ```shell
+            [me@linuxbox ~]$ foo=
+            [me@linuxbox ~]$ echo ${foo:="default value if unset"}
+            default value if unset
+            [me@linuxbox ~]$ echo $foo
+            default value if unset
+            [me@linuxbox ~]$ foo=bar
+            [me@linuxbox ~]$ echo ${foo:="default value if unset"}
+            bar
+            [me@linuxbox ~]$ echo $foo
+            bar
+            ```
+
+      * ${var:？word}
+
+        * 空
+
+          * 终止脚本并报错，错误信息word输出到stderr
+
+        * 非空
+
+          * 结果为word的值
+
+        * eg
+
+          * ```shell
+            [me@linuxbox ~]$ foo=
+            [me@linuxbox ~]$ echo ${foo:?"parameter is empty"}
+            bash: foo: parameter is empty
+            [me@linuxbox ~]$ echo $?
+            1
+            [me@linuxbox ~]$ foo=bar
+            [me@linuxbox ~]$ echo ${foo:?"parameter is empty"}
+            bar
+            [me@linuxbox ~]$ echo $?
+            0
+            ```
+
+      * $(var:+word)
+
+        * 空
+
+          * 结果是空
+
+        * 非空
+
+          * 结果是word(但是不会改变var的值)
+
+        * eg
+
+          * ```shell
+            [me@linuxbox ~]$ foo=
+            [me@linuxbox ~]$ echo ${foo:+"substitute value if set"}
+            
+            [me@linuxbox ~]$ foo=bar
+            [me@linuxbox ~]$ echo ${foo:+"substitute value if set"}
+            substitute value if set
+            
+            ```
+
+#### 5.2.1.2 字符串变量
 
 > 行为类似字符串处理函数
+>
+> 构建和赋值以及展开的简单使用见上一节变量通用部分，没有特殊之处
+
+##### 1. 展开的复杂应用
+
+> 完全就是借助展开实现的字符串处理函数
 
 * ${#string}
 
@@ -3955,8 +4130,6 @@
       ABc
       ```
 
-#### 5.2.1.4 字符串
-
 #### 5.2.1.3 数组
 
 > array [əˈreɪ] n. 数组，阵列；大堆，大群
@@ -3995,83 +4168,81 @@
 
   > 类似C++提供的操作数组的一些标准库函数，只不过是借助shell展开机制实现的
 
-  * 数组作为for循环的集合使用
+  * ${var[@]}
 
-    * ${var[@]}
+    * 数组作为for循环的集合使用
+  
+    * ```shell
+      animals=("a dog" "a cat" "a fish")
+      [me@linuxbox ~]$ echo ${animals[@]}
+      a dog a cat a fish
+      [me@linuxbox ~]$ for i in ${animals[@]}; do echo $i; done
+      a
+      dog
+      a
+      cat
+      a
+      fish
+      [me@linuxbox ~]$ for i in "${animals[@]}"; do echo $i; done
+      a dog
+      a cat
+      a fish
+      ```
 
-      * ```shell
-        animals=("a dog" "a cat" "a fish")
-        [me@linuxbox ~]$ echo ${animals[@]}
-        a dog a cat a fish
-        [me@linuxbox ~]$ for i in ${animals[@]}; do echo $i; done
-        a
-        dog
-        a
-        cat
-        a
-        fish
-        [me@linuxbox ~]$ for i in "${animals[@]}"; do echo $i; done
-        a dog
-        a cat
-        a fish
-        ```
+      * 显然通俗意义上我们更应该使用  "${var[@]}"形式
 
-        * 显然通俗意义上我们更应该使用  "${var[@]}"形式
-
-        * 为啥加引号，不知道为啥，bash设计的不加引号不是我们想要的那个结果，那个结果也不知道有啥用，我用的zsh不加引号正常使用就能分离出来每个元素一行。
-
-          
-
+      * 为啥加引号，不知道为啥，bash设计的不加引号不是我们想要的那个结果，那个结果也不知道有啥用，我用的zsh不加引号正常使用就能分离出来每个元素一行。
+  
+* ${#var[@]}
+  
   * 确定数组元素个数
-
-    * ${#var[@]}
-
-      * ```shell
-        [me@linuxbox ~]$ a[100]=foo
-        [me@linuxbox ~]$ echo ${#a[@]} # number of array elements
-        1
-        [me@linuxbox ~]$ echo ${#a[100]} # length of element 100
-        3
-        ```
-
-        * 同样这个是bash的情况,只创建了a[100],那么长度为1，zsh情况则是长度为100，可能默认创建0~99号元素了吧。
-        * 不过一般也不这么用，都是从0开始赋值的，这种情况下应该都是实际的长度。
-        * 这个展开也可以显示字符串长度，所以上例显示了a[100]的长度
-
-  * 确定已经使用了的下标
-
+    
+  * ```shell
+      [me@linuxbox ~]$ a[100]=foo
+      [me@linuxbox ~]$ echo ${#a[@]} # number of array elements
+      1
+      [me@linuxbox ~]$ echo ${#a[100]} # length of element 100
+      3
+      ```
+    
+    * 同样这个是bash的情况,只创建了a[100],那么长度为1，zsh情况则是长度为100，可能默认创建0~99号元素了吧。
+      * 不过一般也不这么用，都是从0开始赋值的，这种情况下应该都是实际的长度。
+      * 这个展开也可以显示字符串长度，所以上例显示了a[100]的长度
+  
+* ${!var[@]}
+  
+  > 确定已经使用了的下标
+    >
     > shell数组不要求连续存在，中间可以存在空隙(gap)
     >
-    > 我猜测shell的数组根本不是连续的一块内存挨着存放的。所以随便空隙。
-
-    * ${!var[@]}
-
-      * 显示使用了那些下标
-
-      * ```shell 
-        linuxlp@LPPC:~/GitRepo/Linux$ foo=([2]=a [4]=b [6]=c)
-        linuxlp@LPPC:~/GitRepo/Linux$ echo ${!foo[@]}
-        2 4 6
-        ```
-
+  > 我猜测shell的数组根本不是连续的一块内存挨着存放的。所以随便空隙。
+  
+  * 显示使用了那些下标
+    
+  * ```shell 
+      linuxlp@LPPC:~/GitRepo/Linux$ foo=([2]=a [4]=b [6]=c)
+      linuxlp@LPPC:~/GitRepo/Linux$ echo ${!foo[@]}
+      2 4 6
+      ```
+  
+* var+=(value value value)
+  
   * 末尾追加元素
-
-    * var+=(value value value)
-
-      * ```shell
-        linuxlp@LPPC:~/GitRepo/Linux$ nmsl=(a b c)
-        linuxlp@LPPC:~/GitRepo/Linux$ echo ${nmsl[@]}
-        a b c
-        linuxlp@LPPC:~/GitRepo/Linux$ nmsl+=(e f g)
-        linuxlp@LPPC:~/GitRepo/Linux$ echo ${nmsl[@]}
-        a b c e f g
-        ```
-
-  * 排序数组
-
-    > 没有直接方法排序原数组，但是可以通过脚本操作产生一个排序好的副本
-
-    * ```shell
+    
+  * ```shell
+      linuxlp@LPPC:~/GitRepo/Linux$ nmsl=(a b c)
+      linuxlp@LPPC:~/GitRepo/Linux$ echo ${nmsl[@]}
+      a b c
+      linuxlp@LPPC:~/GitRepo/Linux$ nmsl+=(e f g)
+      linuxlp@LPPC:~/GitRepo/Linux$ echo ${nmsl[@]}
+      a b c e f g
+      ```
+  
+* 排序数组
+  
+  > 没有直接方法排序原数组，但是可以通过脚本操作产生一个排序好的副本
+  
+  * ```shell
       linuxlp@LPPC:~/GitRepo/Linux$ lppc=(k f e a x i k)
       linuxlp@LPPC:~/GitRepo/Linux$ echo ${lppc[@]}
       k f e a x i k
@@ -4081,15 +4252,15 @@
       #利用命令展开机制，借助管道命令的输出重新赋值一个新数组
       #利用这种办法，可以实现许多操作，基于原数组生成不同的子数组
       ```
-
-  * 删除数组或元素
-
-    * unset var
+  
+* 删除数组或元素
+  
+  * unset var
     * unset 'var[2]'   防止展开，加单引号将完整参数传递个unset命令
-
-  * 省略下标
-
-    * var=10   <==>  var[0]=10
+  
+* 省略下标
+  
+  * var=10   <==>  var[0]=10
 
 ##### 2. 关联数组
 
@@ -4161,38 +4332,40 @@
 
 >  expression
 
-#### 5.2.3.1 整数表达式
+#### 5.2.3.1 数值表达式
 
-> shell本身只支持整数运算。
+> bash只支持整数运算，zsh支持整数和浮点数运算。数值表达式针对zsh而言，如果是bash，那么“数值表达式”一词全部替换为“整数表达式”
 >
-> 整数表达式指操作数是整数变量或者整数字面值的表达式
+> 数值表达式指操作数是数值变量或者数值字面值的表达式
 >
-> 整数表达式一共两种：整数算术表达式和整数逻辑表达式
+> 数值表达式一共两种：数值算术表达式和数值逻辑表达式
 
-##### 1. 整数表达式展开
+##### 1. 数值表达式展开
 
 * 概念
-  * 使用整数表达式，就是使用整数表达式的值，主要有两种作用
+  * 使用数值表达式，就是使用数值表达式的值，主要有两种作用
     * 赋值
     * 条件判断
-  * shell跟C++不一样，不可以直接使用整数表达式的值，需要借用展开机制
+  * shell跟C++不一样，不可以直接使用数值表达式的值，需要借用展开机制
     * 赋值使用
       * var = **$(( expression ))**
-      * var的只就是整数表达式的计算结果
+      * var的只就是数值表达式的计算结果
     * 条件判断使用
       * if **(( expression ))** ; then commands; fi
-        * 整数表达式结果非0，表示真，0表示假。
+        * 数值表达式结果非0，表示真，0表示假。
 
-##### 2. 整数表达式分类
+##### 2. 数值表达式分类
 
 * 定义
 
-  * 采用算术运算符的是整数算术表达式，表达式的结果是实际的计算结果。
-  * 采用逻辑运算符的是整数逻辑表达式，表达式的结果是0或1.
+  * 采用算术运算符的是数值算术表达式，表达式的结果是实际的计算结果。
+  * 采用逻辑运算符的是数值逻辑表达式，表达式的结果是0或1.
 
 * 运算数(operand)
 
-  * 支持不同进制的整数
+  * 支持不同进制的整数。
+
+  * 支持浮点数(zsh支持，bash不支持)
 
   * | Notation    | Descriptioon                                                 |
     | :---------- | :----------------------------------------------------------- |
@@ -4236,9 +4409,12 @@
       | ++i      |                                      |          |             |
       | i--      |                                      |          |             |
       | --i      |                                      |          |             |
-
+      
+      * 如果是bash，'/'只能处理整数，得出的结果也是整数。
+      * 如果是zsh，'/'可以处理整数或浮点数，跟C++行为一样，如果两边都是整数，那么结果也是整数，即会舍去小数部分，如果两边有一个浮点数，那么值就是准确的值。
+  
   * 逻辑运算符(logical operator)
-
+  
     * | Operator          | Description                                                  |
       | :---------------- | :----------------------------------------------------------- |
       | <=                | Less than or equal to                                        |
@@ -4252,10 +4428,11 @@
       | ！                |                                                              |
       | expr1?expr2:expr3 | Comparison (ternary) operator. If expression expr1 evaluates to be non-zero (arithmetic true) then expr2, else expr3.（ternary operator 三元运算符） |
 
-##### 3. 整数表达式扩展
+##### 3. 数值表达式扩展
 
-* 整数运算
-  * shell语言只支持整数运算，如果想进行浮点数计算，需要依赖外部程序
+* 数值运算
+  * bash语言只支持整数运算，如果想进行浮点数计算，需要依赖外部程序
+  * zsh原生支持浮点运算。
 * 数值计算
   * bc
     * bc是一个大多数发行版都带的强大的计算程序，不仅可以实现普通计算器的功能，还可以接受脚本语言文件来实现强大的计算功能，我理解bc就类似弱版的matlab吧。
