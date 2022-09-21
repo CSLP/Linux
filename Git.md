@@ -149,8 +149,11 @@
   * 默认创建master分支
 * git clone [-o   name1]  URL  [name2]
   * 克隆远程仓库到本地
-  * name1指定远程仓库源在本地仓库的名字
-  * name2指定远程仓库在本地仓库的名字
+    * 创建本地常规分支master并跟踪远程仓库设定的默认分支。
+  * URL指定远程仓库的地址
+  * name1指定远程仓库在本地的名字
+  * name2指定远程仓库在本地的副本的名字
+    * 如果不指定name1,name2, 那么默认远程仓库名origin,默认本地仓库名同远程仓库名。
 
 ### 1. 通配符支持
 
@@ -432,7 +435,7 @@
   *  匹配模式可以以（/）结尾指定目录。
   *  要忽略指定模式以外的文件或目录，可以在模式前加上叹号（!）取反。
 
-### 4. 查看仓库信息
+### 4. 查看本地仓库信息
 
 ##### 4.1 查看所有文件状态
 
@@ -651,19 +654,21 @@
 ##### 7.0.1 本地常规分支
 
 * 本地新建的分支
-* 支持查看、新建、检入检出、删除、移动、合并、被合并
+* 支持查看、新建、检入检出、删除、移动、合并、被合并、推送、拉取
   * 查看指查看分支名，查看所指索引对象
   * 检入指checkout切换到分支，检出指切换出去。
   * 移动指指向其他的提交对象
   * 合并指合并其他本地分支，本质是合并后移动到新的提交对象
   * 被合并指被其他本地常规分支合并，当前分支不会移动。
+  * 推送指将此分支推送到远程仓库的某个分支
+  * 拉取指将远程仓库的某分支拉取到此分支
 
 ##### 7.0.2 本地远程跟踪分支
 
 * git基于本地存储的远程仓库信息自动创建的远程分支的引用
 * 支持查看、被合并
   * 即支持只读操作
-* 不支持新建、检入检出、删除、移动、合并
+* 不支持新建、检入检出、删除、移动、合并、推送、拉取
   * 即不支持写操作
 * 作用
   * 除了在远程仓库服务器上亲手操作(或者在github网页上)，我们无法实时操作远程分支。
@@ -674,7 +679,7 @@
 ##### 7.0.3 本地常规跟踪分支
 
 * 跟踪远程分支的本地常规分支
-* 支持查看、新建、检入检出、删除、移动、合并、被合并、跟踪、取消跟踪
+* 支持查看、新建、检入检出、删除、移动、合并、被合并、推送、拉取、跟踪、取消跟踪
   * 因为是一种特殊的本地常规分支，所以支持普通本地常规分支的一切操作
   * 同时因为其特殊属性，支持了跟踪相关的操作。
 * 作用
@@ -727,6 +732,10 @@
   * 创建一个跟踪该远程分支的本地跟踪分支并切换到该分支
 * git checkout  --track \<remote>/\<branch>
   * 创建一个跟踪该远程分支的同名本地跟踪分支并切换到该分支
+* git pull  \<remote\>    remoteBranch:localBranch
+* git pull \<remote>    branch   <==>  git pull \<remote>  branch:branch
+  * 将远程分支拉取到本地常规分支，如果**本地常规分支不存在，那么创建并拉取**
+
 
 #### 7.3 删除分支
 
@@ -744,6 +753,12 @@
 * git branch [existedBranchName]  --unset-upstream
   * 取消已存在分支的跟踪状态
     * 省略本地常规分支名，默认为当前分支
+* git push -u \<remote> localBranch:remoteBranch
+* git push -u \<remote> branch
+  * 推送的同时设置此本地常规分支跟踪对应远程分支
+* git pull --set-upstream \<remote> localBranch:remoteBranch
+* git pull --set-upstream \<remote> branch
+  * 拉取的同时设置此本地常规分支跟踪对应远程分支
 
 #### 7.5 检入检出分支
 
@@ -853,7 +868,7 @@
     * 修改冲突文件，保留它们的修改，丢掉我们(ours)的修改
 
 
-#### 7.3 移动分支
+#### 7.7 移动分支
 
 > 合并分支时git会自动移动分支，我们不讨论这个
 >
@@ -897,85 +912,140 @@
   * 压缩提交
     * 可以移动当前分支到10个提交之前，利用--soft参数，会暂存目的提交和最新提交的差异，也就是这10个提交所做的修改，然后直接提交，相当于用这一个提交代替了10个提交。
 
-## 12. git remote
+#### 7.8 推送拉取分支
 
-* git remote
-  * 列出所有的远程仓库
-* git remote -v
-  * 显示需要读写远程仓库使用的 Git 保存的简写与其对应的 URL
-* git remote add \<name\> \<url\>
-  * 添加远程仓库，name是本地远程仓库的名字，用来代替次次输入远程仓库的URL。
-* git remote rename \<oldname> \<newname>
-  * 修改远程仓库的名字
-* git remote show \<remote\>
-  * 显示远程仓库的详细信息
-    * 包括远程仓库分支有多少个
-    * git push中那些本地分支跟踪了远程分支
-    * git pull中那些本地分支跟踪了远程分支
-* git remote rm \<remote>
-  * 移除远程仓库
+##### 7.8.1 释义
 
-## 13. git fetch
+* 通信
 
-* git fetch \<remote\>
-  * 拉取远程仓库的信息
-    * 相当与更新本地存储的远程仓库的信息。
-* git fetch --all
-  * 拉取所有远程仓库的信息
+  * git提供push，pull机制来进行本地和远程仓库之间的通信，以实现互相同步
 
+    * push类似本地修改，然后将其同步到远程
 
-## 14. git pull
+    * pull类似远程修改，然后将其同步到本地
+* **分支对分支**
+* push, pull是分支对分支的，需要指明哪个分支要推送、拉取哪个分支
+* 本质
 
-* git pull
-  * 在跟踪分支执行git pull, 自动拉取上游分支并合并到当前分支
-  * 假设当前分支master ，上游分支 origin/master
-    * git pull   ==  git fetch origin;  git merge origin/master
-      * 有一点不同，当上游分支与当前分支有分歧时，git pull失败，还是需要手动合并。
+  * push，pull的本质其实是一种“合并”
+    * push将本地常规分支推送上去，然后git自动将其合并到对应远程分支。
+      * 这种只能处理简单的快速合并，即本地分支指向的提交对象是远程分支指向对象的后代。(称为本地分支比远程分支新),这样只需简单将远程分支指向本地常规分支所指的那个就行了
+      * 如果出现分叉或者远程分支更新，那么git不会自动合并，会提示存在分歧(divergent)，那么我们需要先fetch远程信息，然后手动合并，之后在push。
+        * 这里用词是分歧而不是冲突(conflict)的原因是只要有分叉或者远程分支更新，git就拒绝push，而不会尝试自动合并。而冲突则是自动合并失败的原因。
+    * pull将远程分支拉取下来并自动将其合并到对应本地分支。
+      * 就类似git fetch + git merge(或git rebase) 的组合，git拉去后自动合并
+      * 同样只能简单快速合并，如果出现分叉或本地分支更新情况，即分歧(divergent),需要手动合并。
+  * 换位思考
+    * push
+      * 本地执行push，相当于远端执行git pull(git fetch + git merge)
+    * pull
+      * 本地执行pull，相当于远端执行git push
+    * git
+      * 这一切都是git自动完成的，强。
 
-## 15. git clone
-
-* git clone URL
-  * 克隆远程仓库
-    * 本地新建仓库名字同远程仓库，本地新建master分支并跟踪远程master分支。
-    * 自动增加远程仓库名为origin，同时新增远程跟踪分支 origin/master
-* git clone URL  repoName
-  * 手动指定本地仓库名字
-* git clone -o remoteName URL
-  * 手动指定远程仓库名字
-
-## 14. git push
+##### 7.8.1 push
 
 > git push本质是写远程仓库，所以你得有远程仓库的写权限才能push
 
-* git push \<remote\> \<branch>
-  * 将当前分支推送到远程仓库的指定分支
-    * 本质是将当前分支合并到远程仓库分支
-    * 如果远程分支与本地分支有分歧(divergent)，需要本地解决分歧后在push。
-      * 为啥这里用词分歧，而不是冲突。
-        * 当本地合并时，快速合并简单，直接合并
-          * 三方合并无冲突，直接合并，有冲突需要手动解决冲突，然后合并
-      * 而git push当本地分支是远程分支的后代时，可以直接快速合并，远程分支指向本地分支所指提交对象就完了。但是当本地分支和远程分支有分叉时，不管有无冲突，都不会自动合并，需要本地手动合并后再git push.
-      * 常见于拉取远程分支到本地后，我做了一些修改，然后远程分支别人也做了修改并push了。此时我再push就会失败，相当于本地分支与远程分支有分歧了，需要本地合并最新的远程分支，然后再push。
-  * git push origin  master
-    * 如果origin存在master分支，将本地master分支推送到远程master分支
-    * 如果origin不存在master分支，远程仓库创建master分支，然后推送
-    * 这条命令是简略形式，真正的命令是  git push origin  master:master
-      * 表示将当前分支master推送到远程分支master。
-      * 如果想要把当前分支master推送到一个名字不同的远程分支main
-        * git push origin master:main表示将当前分支master推送到远程分支main，同理如果main不存在，那么创建main。
-        * 或 git push origin HEAD:main 因为HEAD值永远是当前分支的值
-* git push -u \<remote> \<branch>
-  * 将当前分支推送到远程仓库的指定分支,并且指定当前分支跟踪远程仓库指定分支，之后在当前分支只需直接git push, git pull不用加参数，默认从跟踪的远程分支拉取。
+* git push \<remote\>    localBranch:remoteBranch
+  * 释义
+    * 将本地某个分支推送到远程仓库某个分支，如果远程分支不存在，那么创建并推送。
+      * remote指定远程仓库名
+      * remoteBranch指定该远程仓库的一个远程分支名
+      * localBranch指定要推送那个本地常规分支，可以用具体的分支名字，也可以用HEAD，表示当前分支。
+  * 变体
+    * git push \<remote>    branch   <==>  git push \<remote>  branch:branch
+      * 简写，表示将本地常规分支推送到**同名**远程分支
+    * git push -u \<remote> localBranch:remoteBranch
+    * git push -u \<remote> branch
+      * -u表示推送的同时设置此本地常规分支跟踪对应远程分支。
+    * git push
+      * 简写，如果当前分支已经跟踪了一个同名远程分支，那么直接执行git push就行。
 
-* git push \<remote>  --delete \<branch>
-  * 删除远程仓库的分支
+##### 7.8.2 pull
 
+> git push本质是读远程仓库，所以你得有远程仓库的读权限才能push
 
-
-
+* git pull  \<remote\>    remoteBranch:localBranch
+  * 释义
+    * 将远程分支拉取到本地常规分支，如果本地常规分支不存在，那么创建并拉取
+      * remote指定远程仓库名
+      * remoteBranch指定该远程仓库的一个远程分支名
+      * localBranch指定要拉取到哪个本地常规分支，可以用具体的分支名字，也可以用HEAD，表示当前分支。
+  * 变体
+    * git pull \<remote>    branch   <==>  git pull \<remote>  branch:branch
+      * 简写，表示将远程分支拉取到**同名**本地常规分支
+    * git pull --set-upstream \<remote> localBranch:remoteBranch
+    * git pull --set-upstream \<remote> branch
+      * --set-upstream 表示拉取的同时设置此本地常规分支跟踪对应远程分支。
+    * git push
+      * 简写，如果当前分支已经跟踪了一个远程分支，那么直接执行git pull就行。
+        * 相比git push，不需要同名
 
 ## 2. 2 远程仓库
 
 > 主要涉及本地与远程仓库的交互操作
 
-### 
+### 1. 创建仓库
+
+##### 1.1 远端
+
+* 去github机房手动操作git服务器新建仓库
+* GitHub网站新建仓库
+
+##### 1.2 本地
+
+### 2. 本地管理远程仓库
+
+> git提供了在本地存储远程仓库信息的功能，借助这个功能，我们就可以离线工作了。
+>
+> 好处是离线也能知道远程仓库的信息，坏处就是切记这个信息是上一次通信后远程仓库的信息，而不是最新的。
+
+* git remote
+  * 列出本地存储的所有的远程仓库
+* git remote -v
+  * 显示需要读写远程仓库使用的 Git 保存的简写与其对应的 URL
+* git remote show \<remote\>
+  * 显示远程仓库的详细信息
+    * 包括远程仓库分支有多少个，本地是否已经生成了对应的远程跟踪分支
+    * git push中那些本地分支跟踪了远程分支
+    * git pull中那些本地分支跟踪了远程分支
+* git remote add \<name\> \<url\>
+  * 添加远程仓库，name是本地远程仓库的名字，用来代替次次输入远程仓库的URL。
+* git remote rename \<oldname> \<newname>
+  * 修改远程仓库的名字
+* git remote rm \<remote>
+  * 移除远程仓库
+
+* git fetch \<remote\>
+  * 拉取远程仓库的信息并按需创建删除本地远程跟踪分支
+    * 相当于更新本地存储的远程仓库的信息。
+* git fetch --all
+  * 拉取所有远程仓库的信息
+
+### 3. 远程分支
+
+#### 3.3 创建分支
+
+##### 3.3.1 远端
+
+* 去github机房手动操作git服务器新建分支
+* GitHub网站新建分支
+
+##### 3.3.2 本地
+
+* git push \<remote\>    localBranch:remoteBranch
+* git push \<remote>    branch   <==>  git push \<remote>  branch:branch
+  * 将本地某个分支推送到远程仓库某个分支，**如果远程分支不存在，那么创建**并推送。
+
+#### 3.4 删除分支
+
+##### 3.4.1 远端
+
+* 去github机房手动操作git服务器删除分支
+* GitHub网站删除分支
+
+##### 3.4.2 本地
+
+* git push \<remote>  --delete \<branch>
+  * 删除远程仓库的分支
