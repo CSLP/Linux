@@ -3563,11 +3563,27 @@
 
 * \'
   * 位于单引号内的所有特殊符号失去特殊意义，不会被展开。
+  
   * 但是唯一的例外就是单引号本身，即不支持嵌套。
     * echo ''x''      并不会输出'x'  而是只有x ，要想输出'x', 利用 echo " 'x' ",双引号内的单引号无特殊意义。
     * 所以尽量少嵌套引号。
+    
   * 例子同双引号，区别就是$, \\, \`在单引号中也失去特殊意义
     * echo '\$, \\, \`'   输出\$, \\, \`
+    
+    * ```shell
+      #一个有趣的例子
+      HELLO="hi lp"
+      echo '"hi lp"'
+      #这种情况下，输出结果为"hi lp"
+      #那么如何借用变量输出？
+      echo '"$HELLO"'  #不行，单引号内$无效
+      echo '"\$HELLO"' #不行，单引号内/无效
+      echo '"'$HELLO'"' #正确做法，要展开的再用单引号括起来
+      #很常见的应用，假设fun程序接受一个json串
+      myAddress="dayaocun"
+      fun  '{ "name":"lp", "address":"'$myAddress'"}'
+      ```
 
 #### 3.8.3 转义字符(escapte character 逃逸符)
 
@@ -3852,6 +3868,7 @@
     * var=234
   * 右值
     * $var
+      * 在一些情况下作为右值使用也无需展开，例如字符串展开${string%pattern}中，字符串变量之前无需加$.
     * ${var}
       * 建议用这种形式，如果变量比较简单，那么$var还凑活，变量一复杂，最好用大括号括起来明确的指定变量边界，并且明确告诉shell这是一个变量以避免意料之外的展开。
       * 相比C++,变量充当右值时不能直接使用，需要展开，除了麻烦外也有一个好处，可以直接在字符串中使用变量了:smiley:
@@ -4031,6 +4048,7 @@
             txt.exe
             linuxlp@LPPC:~/GitRepo/Linux$ echo ${foo##*.}
             exe
+            ###注意foo这个字符串变量不用加美元符号 echo ${$foo##*.}错误
             ```
 
 * ${string%pattern}  / ${string%%pattern}
@@ -4353,6 +4371,8 @@
     * 条件判断使用
       * if **(( expression ))** ; then commands; fi
         * 数值表达式结果非0，表示真，0表示假。
+  * 空格
+    * expression两边一定要有空格
 
 ##### 2. 数值表达式分类
 
@@ -4363,7 +4383,9 @@
 
 * 运算数(operand)
 
-  * 支持不同进制的整数。
+  * 支持不同进制的整数变量和字面值
+
+    * 使用整数变量是加不加$都行
 
   * 支持浮点数(zsh支持，bash不支持)
 
@@ -4387,8 +4409,10 @@
 
 * 运算符(operator)
 
-  * 算术运算符(arithmetic operators)
+  * **所有操作符两边都要有空格**
 
+  * 算术运算符(arithmetic operators)
+  
     * | Operator | Description                          | Operator | Description |
       | -------- | ------------------------------------ | -------- | ----------- |
       | +        | 正.(一元运算符 unary operator)       | ~        | 位运算取反  |
@@ -4427,6 +4451,7 @@
       | \|\|              |                                                              |
       | ！                |                                                              |
       | expr1?expr2:expr3 | Comparison (ternary) operator. If expression expr1 evaluates to be non-zero (arithmetic true) then expr2, else expr3.（ternary operator 三元运算符） |
+  
 
 ##### 3. 数值表达式扩展
 
@@ -4453,15 +4478,20 @@
     * if  [ expression ] ; then commands; fi
     * if test expression; then commands; fi
       * 这两个是上古用法，最好不用。
+  * 空格
+    * expression两边一定要有空格
 
 ##### 2. 字符串表达式形式
 
 * 操作数
 
   * 字符串变量或者字符串字面值
+    * 如果是变量需要使用$引用
 
 * 操作符
 
+  * **所有操作符两边都要有空格**
+  
   * | Expression         | 为真情况                                                     |
     | :----------------- | :----------------------------------------------------------- |
     | string             | string is not null.                                          |
@@ -4475,8 +4505,9 @@
     | &&                 | 逻辑与或非,用于复合逻辑表达式                                |
     | \|\|               |                                                              |
     | !                  |                                                              |
-
+  
     * 上表列出的都是[[ expression ]]支持的运算，[ expression ]基本支持，但是有一堆要特殊处理的，所以太麻烦了，这里不列出了，狗都不用 [ expression ].
+  
 
 #### 5.2.3.3 文件表达式
 
@@ -4494,6 +4525,8 @@
     * if  [ expression ] ; then commands; fi
     * if test expression; then commands; fi
       * 这两个是上古用法，最好不用。
+  * 空格
+    * expression两边一定要有空格
 
 ##### 2. 文件表达式形式
 
@@ -4910,7 +4943,7 @@
     | ?string         | read第一个var为问号开头，那么read把string当做提示信息输出，并不会当做变量。例如read "?please input a number:"   n ==  cout<<"please input a number:"; cin>>n;**仅适用于命令行输入情况下。** |
     | -p string       | 输出提示信息，string为提示信息。**仅适用于脚本使用情况下。** |
 
-###### 验证输入(vaildate input
+###### 验证输入(vaildate input)
 
 > vaild [ˈvælɪd] a.有效的,合理的
 >

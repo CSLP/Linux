@@ -742,24 +742,34 @@
 
 #### 7.2 创建分支
 
-* git branch \<name>
-  * 创建一个本地常规分支。
-    * 本质是创建一个指向当前分支指向的提交对象的可移动指针
-* git branch \<newBranchName> \<existedBranchName>
-  * 创建一个指向某个存在的本地分支指向的提交对象的分支
-  * 也可以说基于existedBranchName创建一个新分支
-* git checkout  -b \<name>
-  * 基于当前分支创建一个新分支并切换到该新分支
-  * git checkout -b testing == git branch  testing ; git checkout testing
-* git checkout -b  \<branchName\> \<existedBranchName>
-  * 基于给定分支创建一个新分支并切换到该分支
-* git checkout -b \<branchName>  \<remote>/\<branch>
-  * 创建一个跟踪该远程分支的本地跟踪分支并切换到该分支
-* git checkout  --track \<remote>/\<branch>
-  * 创建一个跟踪该远程分支的同名本地跟踪分支并切换到该分支
+* git branch \<newBranchName> [\<existedBranchName> ]
+  * 释义
+    * 创建一个指向某个存在分支指向的提交对象的本地常规分支
+    * 也可以说基于某个存在分支创建一个新分支
+
+  * 变体
+    * git branch \<name>
+      * 省略表示基于当前分支创建
+
+    * git branch \<newBranchName> \<locanBranchName>
+      * 存在分支是本地常规分支
+
+    * git branch \<newBranchName> \<remote>/\<Name>
+      * 存在分支也可以是远程跟踪分支，基于远程跟踪分支创建分支**并且跟踪对应远程分支**
+
+* git checkout -b  \<branchName\> [\<existedBranchName>]
+  * 释义
+    * 基于给定分支创建一个新分支并切换到该分支
+    * 下面变体意义完全同上面的git branch，区别就是多了个切换到该分支的操作
+  * 变体
+    * git checkout  -b \<name>
+    * git checkout -b \<newBranchName>  \<remote>/\<branch>
+    * git checkout  --track \<remote>/\<branch>
+      * git checkout -b \<name>  \<remote>/\<name> 的简写，表示本地创建同名分支并跟踪
 * git pull  \<remote\>    remoteBranch:localBranch
 * git pull \<remote>    branch   <==>  git pull \<remote>  branch:branch
   * 将远程分支拉取到本地常规分支，如果**本地常规分支不存在，那么创建并拉取**
+  * 那么为啥不用git br   newname  \<remote>/\<name>创建新分支呢，git br这样创建的新分支会自动跟踪，git pull这样创建的不会。
 
 
 #### 7.3 删除分支
@@ -768,7 +778,12 @@
   * 删除该分支
   * 如果该分支没有被合并到任何分支，那么git拒绝删除,要想强制删除，使用-D。
 
-#### 7.4 跟踪远程分支
+#### 7.4 重命名分支
+
+* git branch -m [oldname]    \<newname>
+  * 旧的分支名改为新的，省略旧名字表示当前分支
+
+#### 7.5 跟踪远程分支
 
 * git branch  [existedBranchname] -u  \<remote\>/\<branch\>
   * 设置已存在分支跟踪某个远程分支
@@ -779,11 +794,12 @@
   * 取消已存在分支的跟踪状态
     * 省略本地常规分支名，默认为当前分支
 * git push -u \<remote> localBranch:remoteBranch
-* git push -u \<remote> branch
+* git push -u \<remote> branch <==> git push -u \<remote> branch:branch （同名才能这么搞）
   * 推送的同时设置此本地常规分支跟踪对应远程分支
-* git pull --set-upstream \<remote> localBranch:remoteBranch
-* git pull --set-upstream \<remote> branch
-  * 拉取的同时设置此本地常规分支跟踪对应远程分支
+* git checkout -b \<branchName>  \<remote>/\<branch>
+  * 创建一个跟踪该远程分支的本地跟踪分支并切换到该分支
+* git checkout  --track/-t \<remote>/\<branch>
+  * 创建一个跟踪该远程分支的同名本地跟踪分支并切换到该分支
 
 #### 7.5 检入检出分支
 
@@ -1000,10 +1016,7 @@
   * 变体
     * git pull \<remote>    branch   <==>  git pull \<remote>  branch:branch
       * 简写，表示将远程分支拉取到**同名**本地常规分支
-    * git pull --set-upstream \<remote> localBranch:remoteBranch
-    * git pull --set-upstream \<remote> branch
-      * --set-upstream 表示拉取的同时设置此本地常规分支跟踪对应远程分支。
-    * git push
+    * git pull
       * 简写，如果当前分支已经跟踪了一个远程分支，那么直接执行git pull就行。
         * 相比git push，不需要同名
 
