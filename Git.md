@@ -444,7 +444,7 @@
 * git status
   * 查看文件状态
 * git status -s
-  * 查看文件状态简略形式
+  * 查看文件状态简略形式,如果是干净状态，那么什么都不输出，可以用于shell脚本判断。
 
 ##### 4.2查看文件已修改、已暂存内容
 
@@ -728,10 +728,16 @@
 * git branch -r
   * 查看所有本地远程跟踪分支。
     * 该命令只是列出了上次通信后的所有远程分支对应的远程跟踪分支，上次通信后新创建的远程分支对应的这里就显示不了了。不过可以  git fetch --all ; git branch -r 就行了。
+* git branch -a
+  * 显示所有本地分支。
+
 * git  branch -v
   * 查看所有本地常规分支的最后一次提交
 * git branch  -vv
   * 查看所有本地常规分支的最后一次提交，如果有本地常规跟踪分支，列出它们的上游分支。
+* git branch rev-parse [--short] \<branchname>
+  * 显示任意一个本地分支的所指向的提交对象的哈希值，--short参数表示短形式
+
 * git branch --merged \<branchname>
 * git branch --no-merged \<branchnamg>
   * 列出已经合并到或者没合并到该**本地分支**的本地常规分支。

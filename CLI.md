@@ -1427,6 +1427,8 @@
 * **Common Option**
   * -n
     * 不显示文本行最后面的换行符。
+  * -e
+    * 开启反斜杠转义功能
 
 
 ###### dos2unix、unix2dos
