@@ -1329,7 +1329,7 @@
       * FORMAT部分有一个规范，ARGUMENT部分就得有一个参数供格式化，总之一一对应。
 
       * 为啥叫格式化规范，而不叫格式化字符，因为%d只是完整格式化规范的一部分，一个组件。
-        * 完整的规范形式：%\[flags\]\[width\]\[\.precision\]conversion_specification
+        * 完整的规范形式：``` %\[flags\]\[width\]\[\.precision\]conversion_specification```
         * 此处conversion_sepcification转化规范就指具体的 d,f, o, s 。。。如下。
 
       * | Component | Description                                       |
@@ -1359,6 +1359,10 @@
       | 380      | "%010.5f" | 0380.00000 | 将最小字段宽度增加到10，前导零现在变得可见。                 |
       | 380      | "%+d"     | +380       | 使用+标志标记正数。                                          |
       | 380      | "%-d"     | 380        | 使用-标志左对齐                                              |
+      
+    * printf "%10d"    10
+    
+      * 不用加括号，。。。妈的C语言printf()用多了，上来就加括号，直接gg
 
 ###### lpr,lp,a2ps,lpstat,lpq,lprm,cancel
 
@@ -3472,7 +3476,7 @@
 ### 3.7命令展开(commandd expansion)
 
 * $(command)
-  * $(command)  展开为命令的输出结果。
+  * $(command)  展开为命令的输出结果，即使用command的stdout
     * 假设当前工作目录有三个文件apple , bitch
       * echo $(ls)  展开为  echo  apple bitch 
       * echo $(ls -l)  展开为  echo  total 0 -rw-rw-r-- 1 linuxlp linuxlp 0 9月 3 19:17 apple -rw-rw-r-- 1 linuxlp linuxlp 0 9月 3 19:17 bitch 
@@ -4337,9 +4341,11 @@
 
 * 使用
 
-  * 使用结果
+  * 使用echo结果
     * $(functionName)
       * 使用形式同所谓的命令展开，因为命令是程序，可执行脚本也是程序，而脚本中的函数本质上来讲其实就是一个微脚本(mini-scripts)，所以也是程序。所以这么用。
+      * 这个命令展开的本质是使用程序的输出到标准输出的东西，不能使用程序的返回值。
+    * shell函数的返回值跟常规意义上的返回值不同，我们不能直接使用。它只能表示函数的执行成功与否，就这一个作用，不能用来与外界通信，想要通信的话用echo 输出，然后$()使用输出，或者使用全局变量
   * 使用
     * 像普通命令一样用就行了 functonName,后面不用加括号。
   * 为了防止shell调用外部程序，函数定义必须在使用之前。
@@ -4380,6 +4386,10 @@
     * 条件判断使用
       * if **(( expression ))** ; then commands; fi
         * 数值表达式结果非0，表示真，0表示假。
+    * 计算使用
+      * 即使不用数值表达式的值，仅仅是计算，也要包在里面才行(())
+        * tag=10
+        * (( tag+=10 ))
   * 空格
     * expression两边一定要有空格
 
